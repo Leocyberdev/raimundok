@@ -1,0 +1,432 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Adicionar Funcionário{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f1f5f9;
+    }
+    
+    .form-header h2 {
+        color: var(--dark-color);
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .form-header p {
+        color: var(--secondary-color);
+        margin: 0;
+    }
+    
+    .form-floating {
+        margin-bottom: 20px;
+    }
+    
+    .form-floating .form-control {
+        height: 60px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding-top: 25px;
+    }
+    
+    .form-floating .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+    }
+    
+    .form-floating label {
+        color: var(--secondary-color);
+        font-weight: 500;
+    }
+    
+    .password-strength {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        display: none;
+    }
+    
+    .strength-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: #e2e8f0;
+        margin: 8px 0;
+        overflow: hidden;
+    }
+    
+    .strength-fill {
+        height: 100%;
+        transition: all 0.3s ease;
+        border-radius: 2px;
+    }
+    
+    .strength-weak .strength-fill {
+        width: 33%;
+        background: var(--danger-color);
+    }
+    
+    .strength-medium .strength-fill {
+        width: 66%;
+        background: var(--warning-color);
+    }
+    
+    .strength-strong .strength-fill {
+        width: 100%;
+        background: var(--success-color);
+    }
+    
+    .strength-text {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .strength-requirements {
+        margin-top: 10px;
+    }
+    
+    .requirement {
+        font-size: 0.8rem;
+        color: var(--secondary-color);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .requirement.met {
+        color: var(--success-color);
+    }
+    
+    .requirement i {
+        width: 12px;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+    }
+    
+    .form-actions .btn {
+        flex: 1;
+        height: 50px;
+        font-weight: 600;
+    }
+    
+    .preview-card {
+        background: #f8fafc;
+        border: 2px dashed #d1d5db;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .preview-avatar {
+        width: 80px;
+        height: 80px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        font-weight: 600;
+        margin: 0 auto 15px;
+    }
+    
+    .preview-info h5 {
+        margin: 0;
+        color: var(--dark-color);
+        font-weight: 600;
+    }
+    
+    .preview-info p {
+        margin: 5px 0 0;
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+        .form-card {
+            padding: 20px;
+            margin: 10px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="form-card">
+            <div class="form-header">
+                <h2>
+                    <i class="fas fa-user-plus text-primary me-2"></i>
+                    Adicionar Novo Funcionário
+                </h2>
+                <p>Crie uma conta de acesso para um novo funcionário</p>
+            </div>
+            
+            <!-- Preview do Funcionário -->
+            <div class="preview-card" id="employeePreview" style="display: none;">
+                <div class="preview-avatar" id="previewAvatar">?</div>
+                <div class="preview-info">
+                    <h5 id="previewName">Nome do Funcionário</h5>
+                    <p>Funcionário • Conta Ativa</p>
+                </div>
+            </div>
+            
+            <form id="addEmployeeForm" method="POST">
+                <!-- Nome de Usuário -->
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="username" name="username" 
+                           placeholder="Nome de usuário" required minlength="3" maxlength="50">
+                    <label for="username">
+                        <i class="fas fa-user me-2"></i>Nome de Usuário
+                    </label>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Este será o nome usado para fazer login no sistema
+                    </div>
+                </div>
+                
+                <!-- Senha -->
+                <div class="form-floating">
+                    <input type="password" class="form-control" id="password" name="password" 
+                           placeholder="Senha" required minlength="6">
+                    <label for="password">
+                        <i class="fas fa-lock me-2"></i>Senha
+                    </label>
+                </div>
+                
+                <!-- Indicador de Força da Senha -->
+                <div class="password-strength" id="passwordStrength">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="strength-text" id="strengthText">Força da Senha</span>
+                        <small class="text-muted">Recomendado: Forte</small>
+                    </div>
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <div class="strength-requirements">
+                        <div class="requirement" id="req-length">
+                            <i class="fas fa-times"></i>
+                            Pelo menos 6 caracteres
+                        </div>
+                        <div class="requirement" id="req-letter">
+                            <i class="fas fa-times"></i>
+                            Pelo menos uma letra
+                        </div>
+                        <div class="requirement" id="req-number">
+                            <i class="fas fa-times"></i>
+                            Pelo menos um número
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Confirmar Senha -->
+                <div class="form-floating">
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                           placeholder="Confirmar senha" required>
+                    <label for="confirm_password">
+                        <i class="fas fa-lock me-2"></i>Confirmar Senha
+                    </label>
+                    <div class="invalid-feedback" id="passwordMismatch">
+                        As senhas não coincidem
+                    </div>
+                </div>
+                
+                <!-- Informações Adicionais -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-info-circle me-2"></i>Informações Importantes
+                    </h6>
+                    <ul class="mb-0">
+                        <li>O funcionário poderá acessar apenas o painel de funcionário</li>
+                        <li>Receberá notificações quando novos pedidos forem aprovados</li>
+                        <li>Poderá visualizar e adicionar observações aos pedidos</li>
+                        <li>A conta será criada como ativa por padrão</li>
+                    </ul>
+                </div>
+                
+                <!-- Botões -->
+                <div class="form-actions">
+                    <a href="{{ url_for('admin.employees') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-user-plus me-2"></i>Criar Funcionário
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    const usernameInput = $('#username');
+    const passwordInput = $('#password');
+    const confirmPasswordInput = $('#confirm_password');
+    const passwordStrength = $('#passwordStrength');
+    const strengthFill = $('#strengthFill');
+    const strengthText = $('#strengthText');
+    const employeePreview = $('#employeePreview');
+    const previewAvatar = $('#previewAvatar');
+    const previewName = $('#previewName');
+    const submitBtn = $('#submitBtn');
+    
+    // Mostrar preview quando digitar nome
+    usernameInput.on('input', function() {
+        const username = $(this).val().trim();
+        if (username.length > 0) {
+            previewAvatar.text(username[0].toUpperCase());
+            previewName.text(username);
+            employeePreview.show();
+        } else {
+            employeePreview.hide();
+        }
+    });
+    
+    // Mostrar indicador de força da senha
+    passwordInput.on('input', function() {
+        const password = $(this).val();
+        if (password.length > 0) {
+            passwordStrength.show();
+            checkPasswordStrength(password);
+        } else {
+            passwordStrength.hide();
+        }
+    });
+    
+    // Verificar se senhas coincidem
+    confirmPasswordInput.on('input', function() {
+        const password = passwordInput.val();
+        const confirmPassword = $(this).val();
+        
+        if (confirmPassword.length > 0) {
+            if (password === confirmPassword) {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+            } else {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+            }
+        } else {
+            $(this).removeClass('is-valid is-invalid');
+        }
+    });
+    
+    function checkPasswordStrength(password) {
+        let score = 0;
+        const requirements = {
+            length: password.length >= 6,
+            letter: /[a-zA-Z]/.test(password),
+            number: /\d/.test(password)
+        };
+        
+        // Atualizar indicadores de requisitos
+        Object.keys(requirements).forEach(req => {
+            const element = $(`#req-${req}`);
+            if (requirements[req]) {
+                element.addClass('met');
+                element.find('i').removeClass('fa-times').addClass('fa-check');
+                score++;
+            } else {
+                element.removeClass('met');
+                element.find('i').removeClass('fa-check').addClass('fa-times');
+            }
+        });
+        
+        // Atualizar barra de força
+        const strengthBar = passwordStrength.find('.strength-bar');
+        strengthBar.removeClass('strength-weak strength-medium strength-strong');
+        
+        if (score === 1) {
+            strengthBar.addClass('strength-weak');
+            strengthText.text('Fraca').css('color', 'var(--danger-color)');
+        } else if (score === 2) {
+            strengthBar.addClass('strength-medium');
+            strengthText.text('Média').css('color', 'var(--warning-color)');
+        } else if (score === 3) {
+            strengthBar.addClass('strength-strong');
+            strengthText.text('Forte').css('color', 'var(--success-color)');
+        }
+    }
+    
+    // Validação do formulário
+    $('#addEmployeeForm').on('submit', function(e) {
+        const username = usernameInput.val().trim();
+        const password = passwordInput.val();
+        const confirmPassword = confirmPasswordInput.val();
+        
+        // Verificar se nome de usuário é válido
+        if (username.length < 3) {
+            e.preventDefault();
+            alert('O nome de usuário deve ter pelo menos 3 caracteres.');
+            usernameInput.focus();
+            return false;
+        }
+        
+        // Verificar se senha é válida
+        if (password.length < 6) {
+            e.preventDefault();
+            alert('A senha deve ter pelo menos 6 caracteres.');
+            passwordInput.focus();
+            return false;
+        }
+        
+        // Verificar se senhas coincidem
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('As senhas não coincidem.');
+            confirmPasswordInput.focus();
+            return false;
+        }
+        
+        // Mostrar loading
+        submitBtn.prop('disabled', true);
+        submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Criando...');
+    });
+    
+    // Gerar senha aleatória (função extra)
+    window.generatePassword = function() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let password = '';
+        for (let i = 0; i < 8; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        passwordInput.val(password);
+        confirmPasswordInput.val(password);
+        passwordInput.trigger('input');
+        confirmPasswordInput.trigger('input');
+    };
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,440 @@
+{% extends "employee/base.html" %}
+
+{% block page_title %}Detalhes da Ordem de Serviço{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .service-order-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .service-order-header {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .service-order-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+    }
+
+    .service-order-subtitle {
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+
+    .info-header {
+        background: #f8fafc;
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .info-title {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-content {
+        padding: 25px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: var(--secondary-color);
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .company-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 10px;
+    }
+
+    .company-logo {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+
+    .company-placeholder {
+        width: 60px;
+        height: 60px;
+        background: var(--primary-color);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+
+    .company-info h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .company-info p {
+        margin: 5px 0 0;
+        color: var(--secondary-color);
+    }
+
+    .pdf-section {
+        text-align: center;
+        padding: 30px;
+    }
+
+    .pdf-icon {
+        font-size: 4rem;
+        color: var(--danger-color);
+        margin-bottom: 20px;
+    }
+
+    .pdf-info h5 {
+        margin: 0 0 10px 0;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .pdf-info p {
+        color: var(--secondary-color);
+        margin: 0 0 20px 0;
+    }
+
+    .status-badge {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-active {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .status-completed {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .status-cancelled {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+
+    .no-pdf {
+        text-align: center;
+        padding: 40px;
+        color: var(--secondary-color);
+    }
+
+    .no-pdf i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    .description-section {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .description-section h6 {
+        margin: 0 0 10px 0;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .description-section p {
+        margin: 0;
+        color: var(--secondary-color);
+        line-height: 1.6;
+    }
+
+    .team-info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .team-info h6 {
+        margin: 0 0 10px 0;
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .team-members {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .team-member {
+        background: var(--primary-color);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        .company-section {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .info-row {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+            gap: 5px;
+        }
+
+        .team-members {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block employee_content %}
+<div class="service-order-container">
+    <!-- Header -->
+    <div class="service-order-header">
+        <h1 class="service-order-title">{{ service_order.title }}</h1>
+        <p class="service-order-subtitle">Ordem de Serviço #{{ service_order.id }}</p>
+
+        <div class="mt-3">
+            <span class="status-badge {% if service_order.status == 'ativa' %}status-active{% elif service_order.status == 'concluida' %}status-completed{% else %}status-cancelled{% endif %}">
+                {% if service_order.status == 'ativa' %}
+                    <i class="fas fa-play-circle"></i>Ativa
+                {% elif service_order.status == 'concluida' %}
+                    <i class="fas fa-check-circle"></i>Concluída
+                {% else %}
+                    <i class="fas fa-times-circle"></i>Cancelada
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Informações do Pedido -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-shopping-cart"></i>
+                Informações do Pedido
+            </h5>
+        </div>
+        <div class="info-content">
+            <div class="company-section">
+                {% if service_order.order.company_logo %}
+                    <img src="{{ url_for('static', filename='uploads/' + service_order.order.company_logo) }}" 
+                         alt="Logo" class="company-logo">
+                {% else %}
+                    <div class="company-placeholder">
+                        {{ service_order.order.company_name[0].upper() }}
+                    </div>
+                {% endif %}
+
+                <div class="company-info">
+                    <h5>{{ service_order.order.company_name }}</h5>
+                    <p>Pedido #{{ service_order.order.id }} • Criado por {{ service_order.order.created_by.username }}</p>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <div class="info-row">
+                    <span class="info-label">Data do Pedido</span>
+                    <span class="info-value">{{ service_order.order.order_date | format_date }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Data de Entrega</span>
+                    <span class="info-value">{{ service_order.order.delivery_date | format_date }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Status do Pedido</span>
+                    <span class="info-value">
+                        {% if service_order.order.status == 'pendente' %}
+                            <span class="badge bg-warning">Pendente</span>
+                        {% elif service_order.order.status == 'aprovado' %}
+                            <span class="badge bg-info">Aprovado</span>
+                        {% elif service_order.order.status == 'em_producao' %}
+                            <span class="badge" style="background-color: #8b4513; color: white;">Em Produção</span>
+                        {% elif service_order.order.status == 'pronto' %}
+                            <span class="badge bg-success">Pronto</span>
+                        {% elif service_order.order.status == 'entregue' %}
+                            <span class="badge" style="background-color: #6b7280; color: white;">Entregue</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detalhes da Ordem de Serviço -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-clipboard-list"></i>
+                Detalhes da Ordem de Serviço
+            </h5>
+        </div>
+        <div class="info-content">
+            <div class="info-row">
+                <span class="info-label">Criada por</span>
+                <span class="info-value">{{ service_order.created_by.username }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Data de Criação</span>
+                <span class="info-value">{{ service_order.created_at | format_datetime }}</span>
+            </div>
+
+            {% if service_order.description %}
+            <div class="description-section">
+                <h6><i class="fas fa-align-left me-2"></i>Descrição</h6>
+                <p>{{ service_order.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Informações da Equipe -->
+            <div class="team-info">
+                <h6><i class="fas fa-users me-2"></i>Equipe Responsável</h6>
+                <div class="team-members">
+                    {% for employee in service_order.assigned_employees %}
+                        <span class="team-member">{{ employee.username }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Arquivo PDF -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-file-pdf"></i>
+                Arquivo
+            </h5>
+        </div>
+        <div class="info-content">
+            {% if service_order.pdf_filename %}
+            <div class="pdf-section">
+                <div class="pdf-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <div class="pdf-info">
+                    <h5>{{ service_order.pdf_filename }}</h5>
+                    <p>Clique no botão abaixo para baixar o arquivo </p>
+                    <a href="{{ url_for('employee.download_service_order_pdf', service_order_id=service_order.id) }}" 
+                       class="btn btn-danger btn-lg">
+                        <i class="fas fa-download me-2"></i>Baixar o Arquivo
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="no-pdf">
+                <i class="fas fa-file-pdf"></i>
+                <h5>Nenhum arquivo </h5>
+                <p>Esta ordem de serviço não possui arquivo  anexado.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="action-buttons">
+        <a href="{{ url_for('employee.service_orders') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+        </a>
+
+        {% if service_order.pdf_filename %}
+        <a href="{{ url_for('employee.download_service_order_pdf', service_order_id=service_order.id) }}" 
+           class="btn btn-danger">
+            <i class="fas fa-download me-2"></i>Baixar o Arquivo
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    // Destacar o funcionário atual na lista da equipe
+    $('.team-member').each(function() {
+        if ($(this).text() === '{{ current_user.username }}') {
+            $(this).css({
+                'background': 'var(--success-color)',
+                'font-weight': '600'
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
