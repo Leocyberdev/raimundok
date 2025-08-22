@@ -5,7 +5,7 @@
 {% block extra_css %}
 {{ super() }}
 <style>
-    .orders-header {
+    .status-orders-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -14,146 +14,130 @@
         gap: 15px;
     }
 
-    .filters {
-        display: flex;
-        gap: 15px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .table-card {
+    .status-card {
         background: white;
         border-radius: 15px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
         overflow: hidden;
+        transition: all 0.3s ease;
+        border-left: 4px solid;
     }
 
-    .table-header {
-        background: #f8fafc;
-        padding: 20px;
-        border-bottom: 1px solid #e5e7eb;
+    .status-card.status-pronto {
+        border-left-color: #10b981;
     }
 
-    .table-responsive {
-        max-height: 70vh;
-        overflow-y: auto;
+    .status-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
     }
 
-    .table th {
-        background: #f8fafc;
-        border: none;
-        font-weight: 600;
-        color: var(--dark-color);
-        padding: 15px;
-        position: sticky;
-        top: 0;
-        z-index: 10;
+    .order-content {
+        padding: 25px;
     }
 
-    .table td {
-        padding: 15px;
-        vertical-align: middle;
-        border-bottom: 1px solid #f1f5f9;
-    }
-
-    .table tbody tr:hover {
-        background: #f8fafc;
-    }
-
-    .company-info {
+    .order-header {
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .company-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
     }
 
     .company-logo {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
         object-fit: cover;
     }
 
     .company-placeholder {
-        width: 40px;
-        height: 40px;
+        width: 50px;
+        height: 50px;
         background: var(--primary-color);
-        border-radius: 8px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 1.1rem;
     }
 
-    .company-details h6 {
+    .company-info h5 {
         margin: 0;
         font-weight: 600;
         color: var(--dark-color);
     }
 
-    .company-details small {
+    .company-info small {
         color: var(--secondary-color);
     }
 
+    .order-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
     .status-badge {
-        padding: 6px 12px;
+        padding: 8px 15px;
         border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-badge.status-pronto {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .order-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 10px;
+    }
+
+    .detail-item {
+        text-align: center;
+    }
+
+    .detail-label {
         font-size: 0.8rem;
+        color: var(--secondary-color);
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        margin-bottom: 5px;
     }
 
-    .status-pendente {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .status-aprovado {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-
-    .status-em_producao {
-        background: #e0e7ff;
-        color: #3730a3;
-    }
-
-    .status-pronto {
-        background: #d1fae5;
-        color: #065f46;
-    }
-
-    .status-entregue {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 5px;
-    }
-
-    .btn-action {
-        width: 35px;
-        height: 35px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        transition: all 0.3s ease;
-    }
-
-    .btn-action:hover {
-        transform: translateY(-2px);
+    .detail-value {
+        font-weight: 600;
+        color: var(--dark-color);
     }
 
     .empty-state {
         text-align: center;
         padding: 60px 20px;
         color: var(--secondary-color);
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
     .empty-state i {
@@ -162,426 +146,399 @@
         opacity: 0.5;
     }
 
-    .pagination-wrapper {
-        padding: 20px;
-        background: #f8fafc;
+    .observation-section {
         border-top: 1px solid #e5e7eb;
+        padding-top: 15px;
+    }
+
+    .observation-form .input-group {
+        margin-bottom: 10px;
+    }
+
+    .observation-form input {
+        font-size: 0.9rem;
+    }
+
+    .observations-list {
+        max-height: 120px;
+        overflow-y: auto;
+    }
+
+    .observation-item {
+        background: #f8fafc;
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-bottom: 5px;
+        border-left: 3px solid var(--primary-color);
+    }
+
+    .observation-item small {
+        display: block;
+        font-size: 0.75rem;
+        margin-bottom: 2px;
     }
 
     @media (max-width: 768px) {
-        .orders-header {
+        .status-orders-header {
             flex-direction: column;
             align-items: stretch;
         }
 
-        .filters {
-            justify-content: center;
+        .order-header {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
         }
 
-        .table-responsive {
-            font-size: 0.9rem;
-        }
-
-        .company-info {
+        .company-section {
             flex-direction: column;
             text-align: center;
-            gap: 8px;
         }
 
-        .action-buttons {
-            flex-direction: column;
+        .order-details {
+            grid-template-columns: 1fr;
+        }
+
+        .order-actions {
+            justify-content: center;
         }
     }
 </style>
 {% endblock %}
 
 {% block employee_content %}
-<div class="orders-header">
+<div class="status-orders-header">
     <div>
         <h2 class="mb-0">
             <i class="fas fa-check-double text-success me-2"></i>
             Pedidos Prontos
         </h2>
-        <p class="text-muted mb-0">Visualize e gerencie todos os pedidos prontos para entrega</p>
+        <p class="text-muted mb-0">Gerencie pedidos com status "Pronto"</p>
     </div>
 
-    <div class="filters">
-        <select class="form-select" id="statusFilter" onchange="filterOrders()">
-            <option value="">Todos os Status</option>
-            <option value="pronto" {% if status_filter == 'pronto' %}selected{% endif %}>Pronto</option>
-            <option value="entregue" {% if status_filter == 'entregue' %}selected{% endif %}>Entregue</option>
-        </select>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for("employee.orders") }}" class="btn btn-outline-primary">
+            <i class="fas fa-list me-2"></i>Todos os Pedidos
+        </a>
     </div>
 </div>
 
-<div class="table-card">
-    {% if orders.items %}
-        <div class="table-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas fa-table me-2"></i>
-                    Lista de Pedidos ({{ orders.total }} total)
-                </h5>
-                <small class="text-muted">
-                    Página {{ orders.page }} de {{ orders.pages }}
-                </small>
-            </div>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>Empresa</th>
-                        <th>Data Pedido</th>
-                        <th>Data Entrega</th>
-                        <th>Criado por</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order_data in orders_with_data %}
-                    {% set order = order_data.order %}
-                    <tr>
-                        <td>
-                            <div class="company-info">
-                                {% if order.company_logo %}
-                                    <img src="{{ url_for('static', filename='uploads/' + order.company_logo) }}" 
-                                         alt="Logo" class="company-logo">
-                                {% else %}
-                                    <div class="company-placeholder">
-                                        {{ order.company_name[0].upper() }}
-                                    </div>
-                                {% endif %}
-                                <div class="company-details">
-                                    <h6>{{ order.company_name }}</h6>
-                                    {% if order.subtitle %}
-                                        <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ order.subtitle }}</p>
-                                    {% endif %}
-                                    <small>ID: #{{ order.id }}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <strong>{{ order.order_date.strftime('%d/%m/%Y') }}</strong><br>
-                            <small class="text-muted">{{ order.created_at.strftime('%H:%M') }}</small>
-                        </td>
-                        <td>
-                            <strong>{{ order.delivery_date.strftime('%d/%m/%Y') }}</strong><br>
-                            <small class="{{ order_data.delivery_status.class }}">{{ order_data.delivery_status.text }}</small>
-                        </td>
-                        <td>
-                            <strong>{{ order.created_by.username }}</strong><br>
-                            <small class="text-muted">{{ order.created_at.strftime('%d/%m/%Y') }}</small>
-                        </td>
-                        <td>
-                            {% if order.is_urgent and order.status != 'entregue' %}
-                                <span class="status-badge" style="background: #fee2e2; color: #dc2626; margin-right: 5px;">
-                                    <i class="fas fa-exclamation me-1"></i>Urgente
-                                </span>
-                            {% endif %}
-                            <span class="status-badge status-{{ order.status }}">
-                                {% if order.status == 'pronto' %}
-                                    <i class="fas fa-check-double me-1"></i>Pronto
-                                {% elif order.status == 'entregue' %}
-                                    <i class="fas fa-truck me-1"></i>Entregue
-                                {% endif %}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <a href="{{ url_for('employee.order_detail', order_id=order.id) }}" class="btn btn-info btn-action" title="Ver Detalhes">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                {% if order.status == 'pronto' %}
-                                <button class="btn btn-success btn-action" title="Marcar como Entregue" onclick="openDeliveryModal({{ order.id }}, '{{ order.company_name }}')">
-                                    <i class="fas fa-truck"></i>
-                                </button>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Paginação -->
-        {% if orders.pages > 1 %}
-        <div class="pagination-wrapper">
-            <nav aria-label="Navegação de páginas">
-                <ul class="pagination justify-content-center mb-0">
-                    {% if orders.has_prev %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('employee.ready_orders', page=orders.prev_num, status=status_filter) }}">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                        </li>
+<!-- Lista de Pedidos -->
+{% if orders.items %}
+    {% for order in orders.items %}
+    <div class="status-card status-pronto">
+        <div class="order-content">
+            <div class="order-header">
+                <div class="company-section">
+                    {% if order.company_logo %}
+                        <img src="{{ url_for("static", filename="uploads/" + order.company_logo) }}" 
+                             alt="Logo" class="company-logo">
+                    {% else %}
+                        <div class="company-placeholder">
+                            {{ order.company_name[0].upper() }}
+                        </div>
                     {% endif %}
 
-                    {% for page_num in orders.iter_pages() %}
-                        {% if page_num %}
-                            {% if page_num != orders.page %}
-                                <li class="page-item">
-                                    <a class="page-link" href="{{ url_for('employee.ready_orders', page=page_num, status=status_filter) }}">
-                                        {{ page_num }}
-                                    </a>
-                                </li>
-                            {% else %}
-                                <li class="page-item active">
-                                    <span class="page-link">{{ page_num }}</span>
-                                </li>
-                            {% endif %}
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
+                    <div class="company-info">
+                        <h5>{{ order.company_name }}</h5>
+                        {% if order.subtitle %}
+                            <p class="mb-1 text-muted" style="font-size: 0.9rem; margin: 0.25rem 0;">{{ order.subtitle }}</p>
                         {% endif %}
-                    {% endfor %}
-
-                    {% if orders.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('employee.ready_orders', page=orders.next_num, status=status_filter) }}">
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
-        </div>
-        {% endif %}
-    {% else %}
-        <div class="empty-state">
-            <i class="fas fa-inbox"></i>
-            <h4>Nenhum pedido pronto encontrado</h4>
-            <p>{% if status_filter %}Não há pedidos com o status "{{ status_filter }}"{% else %}Ainda não há pedidos prontos no sistema.{% endif %}</p>
-        </div>
-    {% endif %}
-</div>
-
-<!-- Modal para marcar como entregue -->
-<div class="modal fade" id="deliveryModal" tabindex="-1" aria-labelledby="deliveryModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deliveryModalLabel">
-                    <i class="fas fa-truck me-2"></i>Marcar como Entregue
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Pedido:</strong> <span id="modalCompanyName"></span></p>
-                <p><strong>Status Atual:</strong>
-                    <span class="badge bg-success">Pronto</span>
-                </p>
-
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Atenção:</strong> Para marcar como "Entregue", você deve selecionar pelo menos uma das opções abaixo:
+                        <small>Pedido #{{ order.id }} • Criado por {{ order.created_by.username }}</small>
+                    </div>
                 </div>
 
-                <form id="deliveryForm">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Itens Adicionais Entregues:</label>
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="form-check">
-                                    <input class="form-check-input delivery-option" type="checkbox" id="fonte" name="fonte">
-                                    <label class="form-check-label" for="fonte">
-                                        <i class="fas fa-font me-2"></i>Fonte
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="form-check">
-                                    <input class="form-check-input delivery-option" type="checkbox" id="gabarito" name="gabarito">
-                                    <label class="form-check-label" for="gabarito">
-                                        <i class="fas fa-ruler me-2"></i>Gabarito
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="form-check">
-                                    <input class="form-check-input delivery-option" type="checkbox" id="com_pistao" name="com_pistao">
-                                    <label class="form-check-label" for="com_pistao">
-                                        <i class="fas fa-cog me-2"></i>Com Pistão
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="form-check">
-                                    <input class="form-check-input delivery-option" type="checkbox" id="placa_cristal" name="placa_cristal">
-                                    <label class="form-check-label" for="placa_cristal">
-                                        <i class="fas fa-gem me-2"></i>Placa Cristal
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
+                <div class="order-actions">
+                    <div class="status-badge status-pronto">
+                        <i class="fas fa-check-double"></i>
+                        Pronto
                     </div>
+                    
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#deliverModal{{ order.id }}">
+                        <i class="fas fa-truck me-1"></i>Marcar Entregue
+                    </button>
+                    
+                    {% if order.is_urgent %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Urgente
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
 
-                    <div id="deliveryValidationMessage" class="alert alert-warning d-none">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Selecione pelo menos uma opção de entrega para continuar.
+            <div class="order-details">
+                <div class="detail-item">
+                    <div class="detail-label">Data do Pedido</div>
+                    <div class="detail-value">{{ order.order_date | format_date }}</div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Data de Entrega</div>
+                    <div class="detail-value">{{ order.delivery_date | format_date }}</div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Dias Restantes</div>
+                    <div class="detail-value">
+                        {% set days_left = (order.delivery_date - today()).days %}
+                        {% if days_left > 0 %}
+                            {{ days_left }} dia{{ "s" if days_left != 1 else "" }}
+                        {% elif days_left == 0 %}
+                            <span class="text-warning">Hoje</span>
+                        {% else %}
+                            <span class="text-danger">{{ days_left * -1 }} dia{{ "s" if days_left != -1 else "" }} atrasado</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Campo de observação -->
+            <div class="observation-section mt-3">
+                <form method="POST" action="{{ url_for("employee.add_observation", order_id=order.id) }}" class="observation-form">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="observation" 
+                               placeholder="Adicionar observação..." maxlength="500">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-plus"></i>
+                        </button>
                     </div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success" id="confirmDelivery">
-                    <i class="fas fa-truck me-2"></i>Marcar como Entregue
-                </button>
+                
+                <!-- Observações existentes -->
+                {% if order.last_observations %}
+                    <div class="observations-list mt-2">
+                        {% for obs in order.last_observations %}
+                            <div class="observation-item">
+                                <small class="text-muted">{{ obs.created_at.strftime("%d/%m/%Y %H:%M") }} - {{ obs.author.username }}:</small>
+                                <span>{{ obs.content }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Modal de Entrega -->
+    <div class="modal fade" id="deliverModal{{ order.id }}" tabindex="-1" aria-labelledby="deliverModalLabel{{ order.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deliverModalLabel{{ order.id }}">
+                        <i class="fas fa-truck me-2"></i>Marcar Pedido #{{ order.id }} como Entregue
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Empresa:</strong> {{ order.company_name }}
+                        {% if order.subtitle %}
+                            <br><strong>Subtítulo:</strong> {{ order.subtitle }}
+                        {% endif %}
+                    </div>
+
+                    <!-- Formulário de entrega baseado no order_detail.html -->
+                    <form method="POST" action="{{ url_for("employee.mark_as_delivered", order_id=order.id) }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="delivery_date{{ order.id }}" class="form-label">
+                                <i class="fas fa-calendar me-2"></i>Data de Entrega Real:
+                            </label>
+                            <input type="date" class="form-control" id="delivery_date{{ order.id }}" name="delivery_date" value="{{ today() | format_date_input }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="recipient_name{{ order.id }}" class="form-label">
+                                <i class="fas fa-user me-2"></i>Nome do Recebedor:
+                            </label>
+                            <input type="text" class="form-control" id="recipient_name{{ order.id }}" name="recipient_name" required placeholder="Nome completo de quem recebeu">
+                        </div>
+
+                        <!-- Opções de entrega (baseado no order_detail.html) -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-clipboard-list me-2"></i>Opções de Entrega:
+                            </label>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Atenção:</strong> Selecione pelo menos uma das opções abaixo:
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input delivery-option" type="checkbox" id="fonte{{ order.id }}" name="fonte" value="true">
+                                        <label class="form-check-label" for="fonte{{ order.id }}">
+                                            <i class="fas fa-font me-2"></i>Fonte
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input delivery-option" type="checkbox" id="gabarito{{ order.id }}" name="gabarito" value="true">
+                                        <label class="form-check-label" for="gabarito{{ order.id }}">
+                                            <i class="fas fa-ruler me-2"></i>Gabarito
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input delivery-option" type="checkbox" id="com_pistao{{ order.id }}" name="com_pistao" value="true">
+                                        <label class="form-check-label" for="com_pistao{{ order.id }}">
+                                            <i class="fas fa-cog me-2"></i>Com Pistão
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input delivery-option" type="checkbox" id="placa_cristal{{ order.id }}" name="placa_cristal" value="true">
+                                        <label class="form-check-label" for="placa_cristal{{ order.id }}">
+                                            <i class="fas fa-gem me-2"></i>Placa Cristal
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="deliveryValidationMessage{{ order.id }}" class="alert alert-danger d-none mt-2">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Selecione pelo menos uma opção de entrega para continuar.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="delivery_notes{{ order.id }}" class="form-label">
+                                <i class="fas fa-sticky-note me-2"></i>Observações da Entrega:
+                            </label>
+                            <textarea class="form-control" id="delivery_notes{{ order.id }}" name="delivery_notes" rows="3" placeholder="Observações adicionais sobre a entrega (opcional)"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="delivery_photo{{ order.id }}" class="form-label">
+                                <i class="fas fa-camera me-2"></i>Foto da Entrega (Opcional):
+                            </label>
+                            <input type="file" class="form-control" id="delivery_photo{{ order.id }}" name="delivery_photo" accept="image/*">
+                            <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-success" id="confirmDeliveryBtn{{ order.id }}">
+                                <i class="fas fa-check me-2"></i>Confirmar Entrega
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Paginação -->
+    {% if orders.pages > 1 %}
+    <div class="pagination-wrapper">
+        <nav aria-label="Navegação de páginas">
+            <ul class="pagination justify-content-center">
+                {% if orders.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for(request.endpoint, page=orders.prev_num) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in orders.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != orders.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for(request.endpoint, page=page_num) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if orders.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for(request.endpoint, page=orders.next_num) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+
+{% else %}
+    <div class="empty-state">
+        <i class="fas fa-check-double"></i>
+        <h4>Nenhum pedido pronto</h4>
+        <p>Não há pedidos com status "Pronto" no momento.</p>
+        <a href="{{ url_for("employee.orders") }}" class="btn btn-primary">
+            <i class="fas fa-list me-2"></i>Ver Todos os Pedidos
+        </a>
+    </div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
 {{ super() }}
 <script>
-let currentOrderId = null;
-
-function filterOrders() {
-    const status = document.getElementById('statusFilter').value;
-    const url = new URL(window.location);
-
-    if (status) {
-        url.searchParams.set('status', status);
-    } else {
-        url.searchParams.delete('status');
-    }
-
-    url.searchParams.delete('page'); // Reset para primeira página
-    window.location.href = url.toString();
-}
-
-function openDeliveryModal(orderId, companyName) {
-    currentOrderId = orderId;
-    document.getElementById('modalCompanyName').textContent = companyName;
-    
-    // Limpar seleções anteriores
-    document.querySelectorAll('.delivery-option').forEach(checkbox => {
-        checkbox.checked = false;
+$(document).ready(function() {
+    // Validação das opções de entrega para cada modal
+    $('form[action*="mark_as_delivered"]').on('submit', function(e) {
+        const form = $(this);
+        const orderId = form.attr('action').match(/\/(\d+)\//)[1];
+        const deliveryOptions = form.find('.delivery-option:checked');
+        const validationMessage = form.find('#deliveryValidationMessage' + orderId);
+        
+        if (deliveryOptions.length === 0) {
+            e.preventDefault();
+            validationMessage.removeClass('d-none');
+            
+            // Scroll para a mensagem de erro
+            validationMessage[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            return false;
+        } else {
+            validationMessage.addClass('d-none');
+        }
+        
+        // Mostrar loading no botão
+        const submitBtn = form.find('button[type="submit"]');
+        submitBtn.prop('disabled', true);
+        submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Processando...');
     });
     
-    // Esconder mensagem de validação
-    document.getElementById('deliveryValidationMessage').classList.add('d-none');
-    
-    // Abrir modal
-    const modal = new bootstrap.Modal(document.getElementById('deliveryModal'));
-    modal.show();
-}
-
-// Validação das opções de entrega
-function validateDeliveryOptions() {
-    const hasSelectedOption = document.querySelectorAll('.delivery-option:checked').length > 0;
-    
-    if (!hasSelectedOption) {
-        document.getElementById('deliveryValidationMessage').classList.remove('d-none');
-        return false;
-    } else {
-        document.getElementById('deliveryValidationMessage').classList.add('d-none');
-        return true;
-    }
-}
-
-// Esconder mensagem de validação quando uma opção for selecionada
-document.querySelectorAll('.delivery-option').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        if (document.querySelectorAll('.delivery-option:checked').length > 0) {
-            document.getElementById('deliveryValidationMessage').classList.add('d-none');
+    // Esconder mensagem de validação quando uma opção for selecionada
+    $('.delivery-option').on('change', function() {
+        const form = $(this).closest('form');
+        const orderId = form.attr('action').match(/\/(\d+)\//)[1];
+        const validationMessage = form.find('#deliveryValidationMessage' + orderId);
+        const checkedOptions = form.find('.delivery-option:checked');
+        
+        if (checkedOptions.length > 0) {
+            validationMessage.addClass('d-none');
         }
     });
+    
+    // Auto-refresh a cada 2 minutos
+    setInterval(function() {
+        if (!document.hidden) {
+            // location.reload();
+        }
+    }, 120000);
 });
-
-// Confirmar entrega
-document.getElementById('confirmDelivery').addEventListener('click', function() {
-    if (!validateDeliveryOptions()) {
-        return;
-    }
-    
-    const confirmBtn = this;
-    const originalText = confirmBtn.innerHTML;
-    
-    // Mostrar loading
-    confirmBtn.disabled = true;
-    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
-    
-    // Preparar dados para envio
-    const formDataObj = new FormData();
-    formDataObj.append('status', 'entregue');
-    formDataObj.append('fonte', document.getElementById('fonte').checked ? 'true' : 'false');
-    formDataObj.append('gabarito', document.getElementById('gabarito').checked ? 'true' : 'false');
-    formDataObj.append('com_pistao', document.getElementById('com_pistao').checked ? 'true' : 'false');
-    formDataObj.append('placa_cristal', document.getElementById('placa_cristal').checked ? 'true' : 'false');
-    
-    fetch(`/funcionario/pedidos/${currentOrderId}/alterar-status`, {
-        method: 'POST',
-        body: formDataObj
-    })
-    .then(response => {
-        if (response.redirected) {
-            // Se houve redirecionamento, significa que a operação foi bem-sucedida
-            window.location.href = response.url;
-            return;
-        }
-        return response.text();
-    })
-    .then(data => {
-        if (data) {
-            // Se retornou dados, pode ser uma página de erro
-            // Vamos verificar se contém mensagens de erro
-            if (data.includes('alert-danger') || data.includes('alert-error')) {
-                showAlert('danger', 'Erro ao marcar pedido como entregue. Verifique suas permissões.');
-            } else {
-                // Fechar modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('deliveryModal'));
-                modal.hide();
-                
-                // Mostrar sucesso e recarregar página
-                showAlert('success', 'Pedido marcado como entregue com sucesso!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        showAlert('danger', 'Erro ao marcar pedido como entregue. Tente novamente.');
-    })
-    .finally(() => {
-        // Restaurar botão
-        confirmBtn.disabled = false;
-        confirmBtn.innerHTML = originalText;
-    });
-});
-
-// Função para mostrar alertas
-function showAlert(type, message) {
-    const alertHtml = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    `;
-    
-    // Adicionar alerta no topo da página
-    document.querySelector('.orders-header').insertAdjacentHTML('beforebegin', alertHtml);
-    
-    // Scroll para o topo
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Remover alerta após 5 segundos
-    setTimeout(function() {
-        const alert = document.querySelector('.alert');
-        if (alert) {
-            alert.remove();
-        }
-    }, 5000);
-}
 </script>
 {% endblock %}
+
 
