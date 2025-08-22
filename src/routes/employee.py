@@ -594,3 +594,89 @@ def get_status_permissions():
 
 
 
+
+
+@employee_bp.route('/funcionario/pedidos/prontos')
+@login_required
+@employee_required
+def ready_orders():
+    """Lista de pedidos com status 'pronto' para o funcionário"""
+    page = request.args.get('page', 1, type=int)
+    orders = Order.query.filter_by(status='pronto', approved=True).order_by(Order.delivery_date.asc()).paginate(
+        page=page, per_page=10, error_out=False)
+    return render_template('employee/ready_orders.html', orders=orders, today=date.today)
+
+@employee_bp.route('/funcionario/pedidos/<int:order_id>/marcar-entregue', methods=['POST'])
+@login_required
+@employee_required
+def mark_as_delivered(order_id):
+    """Marcar pedido como entregue com opções de entrega"""
+    from src.models.user import DeliveryOption, StatusHistory
+
+    order = Order.query.get_or_404(order_id)
+
+    if not order.approved:
+        flash('Este pedido ainda não foi aprovado.', 'error')
+        return redirect(request.referrer or url_for('employee.orders'))
+
+    if order.status != 'pronto':
+        flash('Apenas pedidos com status "Pronto" podem ser marcados como entregues.', 'error')
+        return redirect(request.referrer or url_for('employee.ready_orders'))
+
+    delivery_date_str = request.form.get('delivery_date')
+    delivery_notes = request.form.get('delivery_notes')
+    recipient_name = request.form.get('recipient_name')
+    
+    # Opções de entrega
+    fonte = request.form.get('fonte') == 'true'
+    gabarito = request.form.get('gabarito') == 'true'
+    com_pistao = request.form.get('com_pistao') == 'true'
+    placa_cristal = request.form.get('placa_cristal') == 'true'
+
+    if not delivery_date_str or not recipient_name:
+        flash('Data de entrega e nome do recebedor são obrigatórios.', 'error')
+        return redirect(request.referrer or url_for('employee.ready_orders'))
+
+    # Verificar se pelo menos uma opção foi selecionada
+    if not any([fonte, gabarito, com_pistao, placa_cristal]):
+        flash('Selecione pelo menos uma opção de entrega.', 'error')
+        return redirect(request.referrer or url_for('employee.ready_orders'))
+
+    try:
+        delivery_date = datetime.strptime(delivery_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Formato de data inválido.', 'error')
+        return redirect(request.referrer or url_for('employee.ready_orders'))
+
+    # Criar registro de opções de entrega
+    delivery_option = DeliveryOption(
+        order_id=order_id,
+        fonte=fonte,
+        gabarito=gabarito,
+        com_pistao=com_pistao,
+        placa_cristal=placa_cristal,
+        created_by_id=current_user.id
+    )
+    db.session.add(delivery_option)
+
+    # Registrar histórico de alteração
+    status_history = StatusHistory(
+        order_id=order_id,
+        user_id=current_user.id,
+        old_status=order.status,
+        new_status='entregue'
+    )
+    db.session.add(status_history)
+
+    # Atualizar status do pedido
+    order.status = 'entregue'
+    order.delivered_at = datetime.now(pytz.timezone('America/Sao_Paulo'))
+    order.delivery_notes = delivery_notes
+    order.recipient_name = recipient_name
+
+    db.session.commit()
+    flash('Pedido marcado como entregue com sucesso!', 'success')
+    return redirect(url_for('employee.ready_orders'))
+
+
+
