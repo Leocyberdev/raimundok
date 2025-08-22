@@ -349,11 +349,13 @@ def change_order_status(order_id):
     order = Order.query.get_or_404(order_id)
 
     if not order.approved:
-        return jsonify({'success': False, 'message': 'Este pedido ainda não foi aprovado.'})
+        flash('Este pedido ainda não foi aprovado.', 'error')
+        return redirect(request.referrer or url_for('employee.orders'))
 
     new_status = request.form.get('status')
     if not new_status:
-        return jsonify({'success': False, 'message': 'Status não informado.'})
+        flash('Status não informado.', 'error')
+        return redirect(request.referrer or url_for('employee.orders'))
 
     # Verificar se o funcionário tem permissão para alterar para este status
     permission = StatusPermission.query.filter_by(
@@ -362,10 +364,8 @@ def change_order_status(order_id):
     ).first()
 
     if not permission or not permission.can_change:
-        return jsonify({
-            'success': False, 
-            'message': f'Você não tem permissão para alterar o status para "{new_status}".'
-        })
+        flash(f'Você não tem permissão para alterar o status para "{new_status}".', 'error')
+        return redirect(request.referrer or url_for('employee.orders'))
 
     old_status = order.status
 
@@ -378,7 +378,8 @@ def change_order_status(order_id):
 
         # Verificar se pelo menos uma opção foi selecionada
         if not any([fonte, gabarito, com_pistao, placa_cristal]):
-            return jsonify({'success': False, 'message': 'Selecione pelo menos uma opção de entrega'})
+            flash('Selecione pelo menos uma opção de entrega', 'error')
+            return redirect(request.referrer or url_for('employee.orders'))
 
         # Criar registro de opções de entrega
         delivery_option = DeliveryOption(
@@ -425,15 +426,13 @@ def change_order_status(order_id):
 
         db.session.commit()
 
-        return jsonify({
-            'success': True, 
-            'message': f'Status alterado para "{new_status}" com sucesso!',
-            'new_status': new_status
-        })
+        flash(f'Status alterado para "{new_status}" com sucesso!', 'success')
+        return redirect(request.referrer or url_for('employee.orders'))
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Erro ao alterar status: {str(e)}'})
+        flash(f'Erro ao alterar status: {str(e)}', 'error')
+        return redirect(request.referrer or url_for('employee.orders'))
 
 # ===== ROTAS PARA PEDIDOS POR STATUS =====
 
@@ -500,13 +499,51 @@ def status_orders():
                          status_color=config['color'],
                          today=date.today)
 
+@employee_bp.route('/funcionario/pedidos/prontos')
+@login_required
+@employee_required
+def ready_orders():
+    """Página de pedidos prontos para entrega"""
+    page = request.args.get('page', 1, type=int)
+    status_filter = request.args.get('status', '')
 
+    # Query base para pedidos prontos e entregues
+    if status_filter == 'entregue':
+        query = Order.query.filter_by(status='entregue', approved=True)
+    elif status_filter == 'pronto':
+        query = Order.query.filter_by(status='pronto', approved=True)
+    else:
+        # Mostrar ambos por padrão
+        query = Order.query.filter(
+            Order.approved == True,
+            Order.status.in_(['pronto', 'entregue'])
+        )
+
+    orders = query.order_by(Order.delivery_date.asc()).paginate(
+        page=page, per_page=10, error_out=False)
+
+    # Processar dados adicionais para cada pedido
+    orders_with_data = []
+    for order in orders.items:
+        order_data = {
+            'order': order,
+            'delivery_status': get_delivery_status_text(order.delivery_date),
+            'elapsed_days': get_elapsed_days_text(order.order_date),
+            'weekday_name': get_weekday_name_pt(order.order_date),
+            'is_urgent': is_delivery_urgent(order.delivery_date)
+        }
+        orders_with_data.append(order_data)
+
+    return render_template('employee/ready_orders.html', 
+                         orders=orders,
+                         orders_with_data=orders_with_data,
+                         status_filter=status_filter)
 
 @employee_bp.route('/funcionario/pedidos/entregues')
 @login_required
 @employee_required
 def delivered_orders():
-    """Pedidos entregues"""
+    """Pedidos entregues para o funcionário"""
     page = request.args.get('page', 1, type=int)
 
     # Apenas pedidos com status 'entregue' e que tenham data de entrega registrada
@@ -554,8 +591,6 @@ def get_status_permissions():
             })
 
     return jsonify({'allowed_statuses': allowed_statuses})
-
-
 
 
 

@@ -291,21 +291,21 @@
                     
                     <!-- Ações específicas por status -->
                     {% if status == 'aprovado' %}
-                        <form method="POST" action="{{ url_for('admin.update_order_status_quick', order_id=order.id) }}" class="d-inline">
+                        <form method="POST" action="{{ url_for('employee.change_order_status', order_id=order.id) }}" class="d-inline">
                             <input type="hidden" name="status" value="em_producao">
                             <button type="submit" class="btn btn-primary btn-sm">
                                 <i class="fas fa-play me-1"></i>Iniciar Produção
                             </button>
                         </form>
                     {% elif status == 'em_producao' %}
-                        <form method="POST" action="{{ url_for('admin.update_order_status_quick', order_id=order.id) }}" class="d-inline">
+                        <form method="POST" action="{{ url_for('employee.change_order_status', order_id=order.id) }}" class="d-inline">
                             <input type="hidden" name="status" value="pronto">
                             <button type="submit" class="btn btn-success btn-sm">
                                 <i class="fas fa-check me-1"></i>Marcar Pronto
                             </button>
                         </form>
                     {% elif status == 'pronto' %}
-                        <form method="POST" action="{{ url_for('admin.update_order_status_quick', order_id=order.id) }}" class="d-inline">
+                        <form method="POST" action="{{ url_for('employee.change_order_status', order_id=order.id) }}" class="d-inline">
                             <input type="hidden" name="status" value="entregue">
                             <button type="submit" class="btn btn-secondary btn-sm">
                                 <i class="fas fa-truck me-1"></i>Marcar Entregue
@@ -437,7 +437,7 @@
 <script>
 $(document).ready(function() {
     // Confirmar mudanças de status
-    $('form[action*="update_order_status_quick"]').on('submit', function(e) {
+    $('form[action*="change_order_status"]').on('submit', function(e) {
         const status = $(this).find('input[name="status"]').val();
         let message = '';
         

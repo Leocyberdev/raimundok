@@ -646,7 +646,7 @@ import pytz
 
 
 
-@admin_bp.route('/admin/pedidos/detalhes/<int:order_id>')
+@admin_bp.route('/admin/pedidos/<int:order_id>/detalhes')
 @login_required
 @admin_required
 def order_details(order_id):
@@ -1149,5 +1149,10 @@ Mantenha este arquivo em local seguro.
     except Exception as e:
         flash(f'Erro ao criar backup: {str(e)}', 'error')
         return redirect(url_for('admin.settings'))
+
+
+
+
+
 
 

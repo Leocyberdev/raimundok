@@ -509,42 +509,47 @@ document.getElementById('confirmDelivery').addEventListener('click', function() 
     confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
     
     // Preparar dados para envio
-    const formData = {
-        status: 'entregue',
-        fonte: document.getElementById('fonte').checked,
-        gabarito: document.getElementById('gabarito').checked,
-        com_pistao: document.getElementById('com_pistao').checked,
-        placa_cristal: document.getElementById('placa_cristal').checked
-    };
+    const formDataObj = new FormData();
+    formDataObj.append('status', 'entregue');
+    formDataObj.append('fonte', document.getElementById('fonte').checked ? 'true' : 'false');
+    formDataObj.append('gabarito', document.getElementById('gabarito').checked ? 'true' : 'false');
+    formDataObj.append('com_pistao', document.getElementById('com_pistao').checked ? 'true' : 'false');
+    formDataObj.append('placa_cristal', document.getElementById('placa_cristal').checked ? 'true' : 'false');
     
-    // Enviar requisição
-    fetch(`/employee/order/${currentOrderId}/change_status`, {
+    fetch(`/funcionario/pedidos/${currentOrderId}/alterar-status`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams(formData)
+        body: formDataObj
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.redirected) {
+            // Se houve redirecionamento, significa que a operação foi bem-sucedida
+            window.location.href = response.url;
+            return;
+        }
+        return response.text();
+    })
     .then(data => {
-        if (data.success) {
-            // Fechar modal
-            bootstrap.Modal.getInstance(document.getElementById('deliveryModal')).hide();
-            
-            // Mostrar mensagem de sucesso
-            showAlert('success', data.message);
-            
-            // Recarregar página após 2 segundos
-            setTimeout(function() {
-                window.location.reload();
-            }, 2000);
-        } else {
-            showAlert('danger', data.message);
+        if (data) {
+            // Se retornou dados, pode ser uma página de erro
+            // Vamos verificar se contém mensagens de erro
+            if (data.includes('alert-danger') || data.includes('alert-error')) {
+                showAlert('danger', 'Erro ao marcar pedido como entregue. Verifique suas permissões.');
+            } else {
+                // Fechar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deliveryModal'));
+                modal.hide();
+                
+                // Mostrar sucesso e recarregar página
+                showAlert('success', 'Pedido marcado como entregue com sucesso!');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            }
         }
     })
     .catch(error => {
         console.error('Erro:', error);
-        showAlert('danger', 'Erro ao alterar status. Tente novamente.');
+        showAlert('danger', 'Erro ao marcar pedido como entregue. Tente novamente.');
     })
     .finally(() => {
         // Restaurar botão
