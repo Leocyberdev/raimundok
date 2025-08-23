@@ -1,22 +1,7 @@
+
 {% extends "employee/base.html" %}
 
-{% set status_name = "" %}
-{% set status_icon = "" %}
-{% set status_color = "" %}
-
-{% if status == "aprovado" %}
-    {% set status_name = "Aprovados" %}
-    {% set status_icon = "fas fa-thumbs-up" %}
-    {% set status_color = "primary" %}
-{% elif status == "em_producao" %}
-    {% set status_name = "Em Produção" %}
-    {% set status_icon = "fas fa-cogs" %}
-    {% set status_color = "warning" %}
-{% elif status == "pronto" %}
-    {% set status_name = "Prontos" %}
-    {% set status_icon = "fas fa-check-double" %}
-    {% set status_color = "success" %}
-{% endif %}
+{% block page_title %}Pedidos {{ status_name }}{% endblock %}
 
 {% block extra_css %}
 {{ super() }}
@@ -26,36 +11,29 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 30px;
-        flex-wrap: wrap;
-        gap: 15px;
+        padding: 20px 0;
+        border-bottom: 1px solid #e2e8f0;
     }
 
     .status-card {
         background: white;
         border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         margin-bottom: 20px;
         overflow: hidden;
-        transition: all 0.3s ease;
         border-left: 4px solid;
-    }
-
-    .status-card.status-aprovado {
-        border-left-color: #3b82f6;
-    }
-
-    .status-card.status-em_producao {
-        border-left-color: #8b4513;
-    }
-
-    .status-card.status-pronto {
-        border-left-color: #10b981;
+        transition: all 0.3s ease;
     }
 
     .status-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
     }
+
+    .status-aprovado { border-left-color: #3b82f6; }
+    .status-em_producao { border-left-color: #f59e0b; }
+    .status-pronto { border-left-color: #10b981; }
+    .status-entregue { border-left-color: #6b7280; }
 
     .order-content {
         padding: 25px;
@@ -63,126 +41,111 @@
 
     .order-header {
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        align-items: flex-start;
         margin-bottom: 20px;
-        flex-wrap: wrap;
-        gap: 15px;
     }
 
     .company-section {
         display: flex;
         align-items: center;
         gap: 15px;
+        flex: 1;
     }
 
     .company-logo {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
         object-fit: cover;
+        border: 2px solid #f1f5f9;
     }
 
     .company-placeholder {
-        width: 50px;
-        height: 50px;
-        background: var(--primary-color);
-        border-radius: 10px;
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-weight: 700;
+        font-size: 1.5rem;
         color: white;
-        font-weight: 600;
-        font-size: 1.1rem;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
     }
 
-    .company-info h5 {
-        margin: 0;
-        font-weight: 600;
-        color: var(--dark-color);
+    .company-info h4 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 5px 0;
     }
 
-    .company-info small {
-        color: var(--secondary-color);
+    .company-subtitle {
+        color: #64748b;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+    }
+
+    .order-meta {
+        display: flex;
+        gap: 15px;
+        font-size: 0.85rem;
+        color: #64748b;
     }
 
     .order-actions {
         display: flex;
         gap: 10px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .status-badge {
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .status-badge.status-aprovado {
-        background: #dbeafe;
-        color: #1d4ed8;
-    }
-
-    .status-badge.status-em_producao {
-        background: #fef3c7;
-        color: #8b4513;
-    }
-
-    .status-badge.status-pronto {
-        background: #dcfce7;
-        color: #16a34a;
+        align-items: flex-start;
     }
 
     .order-details {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 20px;
+        margin: 20px 0;
         padding: 20px;
         background: #f8fafc;
         border-radius: 10px;
     }
 
     .detail-item {
-        text-align: center;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .detail-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .detail-text {
+        flex: 1;
     }
 
     .detail-label {
         font-size: 0.8rem;
-        color: var(--secondary-color);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 5px;
+        color: #64748b;
+        margin: 0;
     }
 
     .detail-value {
         font-weight: 600;
-        color: var(--dark-color);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: var(--secondary-color);
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .empty-state i {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        opacity: 0.5;
+        color: #1e293b;
+        margin: 0;
     }
 
     .observation-section {
         border-top: 1px solid #e5e7eb;
         padding-top: 15px;
+        margin-top: 20px;
     }
 
     .observation-form .input-group {
@@ -212,21 +175,51 @@
         margin-bottom: 2px;
     }
 
-    @media (max-width: 768px) {
-        .status-orders-header {
-            flex-direction: column;
-            align-items: stretch;
-        }
+    .empty-state {
+        text-align: center;
+        padding: 80px 40px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+    }
 
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        color: #64748b;
+        font-size: 2rem;
+    }
+
+    .pagination-wrapper {
+        margin-top: 40px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .pagination .page-link {
+        border-radius: 10px;
+        margin: 0 3px;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        font-weight: 500;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+        border-color: var(--primary-color);
+    }
+
+    @media (max-width: 768px) {
         .order-header {
             flex-direction: column;
-            align-items: stretch;
-            text-align: center;
-        }
-
-        .company-section {
-            flex-direction: column;
-            text-align: center;
+            gap: 15px;
         }
 
         .order-details {
@@ -234,213 +227,366 @@
         }
 
         .order-actions {
-            justify-content: center;
+            width: 100%;
+            justify-content: flex-end;
         }
     }
 </style>
 {% endblock %}
 
 {% block employee_content %}
-<div class="status-orders-header">
-    <div>
-        <h2 class="mb-0">
-            <i class="{{ status_icon }} text-{{ status_color }} me-2"></i>
-            Pedidos {{ status_name }}
-        </h2>
-        <p class="text-muted mb-0">Gerencie pedidos com status "{{ status_name }}"</p>
-    </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="status-orders-header">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="{{ status_icon }} text-{{ status_color }} me-2"></i>
+                        Pedidos {{ status_name }}
+                    </h2>
+                    <p class="text-muted mb-0">Gerencie pedidos com status "{{ status_name }}"</p>
+                </div>
 
-    <div class="d-flex gap-2">
-        <a href="{{ url_for('employee.orders') }}" class="btn btn-outline-primary">
-            <i class="fas fa-list me-2"></i>Todos os Pedidos
-        </a>
-         
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('employee.orders') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-2"></i>Todos os Pedidos
+                    </a>
+                    <a href="{{ url_for('employee.calendar') }}" class="btn btn-outline-info">
+                        <i class="fas fa-calendar me-2"></i>Calendário
+                    </a>
+                </div>
+            </div>
+
+            {% if orders.items %}
+                {% for order in orders.items %}
+                <div class="status-card status-{{ status }}">
+                    <div class="order-content">
+                        <div class="order-header">
+                            <div class="company-section">
+                                {% if order.company_logo %}
+                                    <img src="{{ url_for('static', filename='uploads/' + order.company_logo) }}" 
+                                         alt="Logo" class="company-logo">
+                                {% else %}
+                                    <div class="company-placeholder">
+                                        {{ order.company_name[0].upper() }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="company-info">
+                                    <h4>{{ order.company_name }}</h4>
+                                    {% if order.subtitle %}
+                                        <p class="company-subtitle">{{ order.subtitle }}</p>
+                                    {% endif %}
+                                    <div class="order-meta">
+                                        <span><i class="fas fa-calendar-plus me-1"></i>Pedido: {{ order.order_date.strftime('%d/%m/%Y') }}</span>
+                                        <span><i class="fas fa-calendar-check me-1"></i>Entrega: {{ order.delivery_date.strftime('%d/%m/%Y') }}</span>
+                                        {% if order.is_urgent %}
+                                            <span class="badge bg-danger"><i class="fas fa-exclamation me-1"></i>URGENTE</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="order-actions">
+                                <a href="{{ url_for('employee.order_detail', order_id=order.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>Detalhes
+                                </a>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                                            data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i> Ações
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <button class="dropdown-item" onclick="openStatusModal({{ order.id }}, '{{ order.status }}')">
+                                                <i class="fas fa-edit me-2"></i>Alterar Status
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalhes do Pedido -->
+                        <div class="order-details">
+                            <div class="detail-item">
+                                <div class="detail-icon bg-primary text-white">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="detail-text">
+                                    <p class="detail-label">Status</p>
+                                    <p class="detail-value">
+                                        {% if order.status == 'aprovado' %}
+                                            <span class="badge bg-info">Aprovado</span>
+                                        {% elif order.status == 'em_producao' %}
+                                            <span class="badge bg-warning">Em Produção</span>
+                                        {% elif order.status == 'pronto' %}
+                                            <span class="badge bg-success">Pronto</span>
+                                        {% elif order.status == 'entregue' %}
+                                            <span class="badge bg-secondary">Entregue</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {% set days_left = (order.delivery_date - today()).days %}
+                            <div class="detail-item">
+                                <div class="detail-icon {% if days_left < 0 %}bg-danger{% elif days_left <= 2 %}bg-warning{% else %}bg-success{% endif %} text-white">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="detail-text">
+                                    <p class="detail-label">Prazo</p>
+                                    <p class="detail-value">
+                                        {% if days_left < 0 %}
+                                            <span class="text-danger">{{ days_left * -1 }} dia(s) atrasado</span>
+                                        {% elif days_left == 0 %}
+                                            <span class="text-warning">Entrega hoje</span>
+                                        {% elif days_left == 1 %}
+                                            <span class="text-warning">Entrega amanhã</span>
+                                        {% else %}
+                                            <span class="text-success">{{ days_left }} dias restantes</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {% if order.description %}
+                            <div class="detail-item">
+                                <div class="detail-icon bg-info text-white">
+                                    <i class="fas fa-comment-dots"></i>
+                                </div>
+                                <div class="detail-text">
+                                    <p class="detail-label">Descrição</p>
+                                    <p class="detail-value">{{ order.description[:100] }}{% if order.description|length > 100 %}...{% endif %}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Campo de observação -->
+                        <div class="observation-section">
+                            <form method="POST" action="{{ url_for('employee.add_observation', order_id=order.id) }}" class="observation-form">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="observation" 
+                                           placeholder="Adicionar observação..." maxlength="500">
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- Observações existentes -->
+                            {% if order.last_observations %}
+                                <div class="observations-list mt-2">
+                                    {% for obs in order.last_observations %}
+                                        <div class="observation-item">
+                                            <small class="text-muted">{{ obs.created_at.strftime('%d/%m/%Y %H:%M') }} - {{ obs.author.username }}:</small>
+                                            <span>{{ obs.content }}</span>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Paginação -->
+                {% if orders.pages > 1 %}
+                <div class="pagination-wrapper">
+                    <nav>
+                        <ul class="pagination">
+                            {% if orders.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('employee.status_orders', status=status, page=orders.prev_num) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for page_num in orders.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                                {% if page_num %}
+                                    {% if page_num != orders.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('employee.status_orders', status=status, page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if orders.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('employee.status_orders', status=status, page=orders.next_num) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="{{ status_icon }}"></i>
+                    </div>
+                    <h4>Nenhum pedido {{ status_name.lower() }} encontrado</h4>
+                    <p>Não há pedidos com status "{{ status_name }}" no momento.</p>
+                    <a href="{{ url_for('employee.orders') }}" class="btn btn-primary">
+                        <i class="fas fa-list me-2"></i>Ver Todos os Pedidos
+                    </a>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 
-<!-- Lista de Pedidos -->
-{% if orders.items %}
-    {% for order in orders.items %}
-    <div class="status-card status-{{ status }}">
-        <div class="order-content">
-            <div class="order-header">
-                <div class="company-section">
-                    {% if order.company_logo %}
-                        <img src="{{ url_for('static', filename='uploads/' + order.company_logo) }}" 
-                             alt="Logo" class="company-logo">
-                    {% else %}
-                        <div class="company-placeholder">
-                            {{ order.company_name[0].upper() }}
+<!-- Modal para alterar status -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Alterar Status do Pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="statusForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Novo Status</label>
+                        <select class="form-select" id="newStatus" name="status" required>
+                            <!-- Opções serão carregadas via JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <!-- Opções de entrega (apenas para status 'entregue') -->
+                    <div id="deliveryOptions" class="mb-3" style="display: none;">
+                        <label class="form-label">Opções de Entrega</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="fonte" name="fonte">
+                            <label class="form-check-label" for="fonte">Fonte</label>
                         </div>
-                    {% endif %}
-
-                    <div class="company-info">
-                        <h5>{{ order.company_name }}</h5>
-                        {% if order.subtitle %}
-                            <p class="mb-1 text-muted" style="font-size: 0.9rem; margin: 0.25rem 0;">{{ order.subtitle }}</p>
-                        {% endif %}
-                        <small>Pedido #{{ order.id }} • Criado por {{ order.created_by.username }}</small>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="gabarito" name="gabarito">
+                            <label class="form-check-label" for="gabarito">Gabarito</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="com_pistao" name="com_pistao">
+                            <label class="form-check-label" for="com_pistao">Com Pistão</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="placa_cristal" name="placa_cristal">
+                            <label class="form-check-label" for="placa_cristal">Placa de Cristal</label>
+                        </div>
                     </div>
                 </div>
-
-                <div class="order-actions">
-                    <div class="status-badge status-{{ status }}">
-                        <i class="{{ status_icon }}"></i>
-                        {{ status_name }}
-                    </div>
-                    
-                    <!-- Ações específicas por status -->
-                    {% if status == 'aprovado' %}
-                        <form method="POST" action="{{ url_for('employee.change_order_status', order_id=order.id) }}" class="d-inline">
-                            <input type="hidden" name="status" value="em_producao">
-                            <button type="submit" class="btn btn-primary btn-sm">
-                                <i class="fas fa-play me-1"></i>Iniciar Produção
-                            </button>
-                        </form>
-                    {% elif status == 'em_producao' %}
-                        <form method="POST" action="{{ url_for('employee.change_order_status', order_id=order.id) }}" class="d-inline">
-                            <input type="hidden" name="status" value="pronto">
-                            <button type="submit" class="btn btn-success btn-sm">
-                                <i class="fas fa-check me-1"></i>Marcar Pronto
-                            </button>
-                        </form>
-                    {% elif status == 'pronto' %}
-                        <form method="POST" action="{{ url_for('employee.change_order_status', order_id=order.id) }}" class="d-inline">
-                            <input type="hidden" name="status" value="entregue">
-                            <button type="submit" class="btn btn-secondary btn-sm">
-                                <i class="fas fa-truck me-1"></i>Marcar Entregue
-                            </button>
-                        </form>
-                    {% endif %}
-                    
-                    {% if order.is_urgent %}
-                        <span class="badge bg-danger">
-                            <i class="fas fa-exclamation-triangle"></i> Urgente
-                        </span>
-                    {% endif %}
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Alterar Status</button>
                 </div>
-            </div>
-
-            <div class="order-details">
-                <div class="detail-item">
-                    <div class="detail-label">Data do Pedido</div>
-                    <div class="detail-value">{{ order.order_date | format_date }}</div>
-                </div>
-
-                <div class="detail-item">
-                    <div class="detail-label">Data de Entrega</div>
-                    <div class="detail-value">{{ order.delivery_date | format_date }}</div>
-                </div>
-
-                <div class="detail-item">
-                    <div class="detail-label">Dias Restantes</div>
-                    <div class="detail-value">
-                        {% set days_left = (order.delivery_date - today()).days %}
-                        {% if days_left > 0 %}
-                            {{ days_left }} dia{{ 's' if days_left != 1 else '' }}
-                        {% elif days_left == 0 %}
-                            <span class="text-warning">Hoje</span>
-                        {% else %}
-                            <span class="text-danger">{{ days_left * -1 }} dia{{ 's' if days_left != -1 else '' }} atrasado</span>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Campo de observação -->
-            <div class="observation-section mt-3">
-                <form method="POST" action="{{ url_for("employee.add_observation", order_id=order.id) }}" class="observation-form">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="observation" 
-                               placeholder="Adicionar observação..." maxlength="500">
-                        <button type="submit" class="btn btn-outline-primary">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                </form>
-                
-                <!-- Observações existentes -->
-                {% if order.last_observations %}
-                    <div class="observations-list mt-2">
-                        {% for obs in order.last_observations %}
-                            <div class="observation-item">
-                                <small class="text-muted">{{ obs.created_at.strftime('%d/%m/%Y %H:%M') }} - {{ obs.author.username }}:</small>
-                                <span>{{ obs.content }}</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
+            </form>
         </div>
     </div>
-    {% endfor %}
-
-    <!-- Paginação -->
-    {% if orders.pages > 1 %}
-    <div class="pagination-wrapper">
-        <nav aria-label="Navegação de páginas">
-            <ul class="pagination justify-content-center">
-                {% if orders.has_prev %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for(request.endpoint, page=orders.prev_num) }}">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
-                {% endif %}
-
-                {% for page_num in orders.iter_pages() %}
-                    {% if page_num %}
-                        {% if page_num != orders.page %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for(request.endpoint, page=page_num) }}">
-                                    {{ page_num }}
-                                </a>
-                            </li>
-                        {% else %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ page_num }}</span>
-                            </li>
-                        {% endif %}
-                    {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">...</span>
-                        </li>
-                    {% endif %}
-                {% endfor %}
-
-                {% if orders.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for(request.endpoint, page=orders.next_num) }}">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
-    {% endif %}
-
-{% else %}
-    <div class="empty-state">
-        <i class="{{ status_icon }}"></i>
-        <h4>Nenhum pedido {{ status_name.lower() }}</h4>
-        <p>Não há pedidos com status "{{ status_name }}" no momento.</p>
-        <a href="{{ url_for("employee.orders") }}" class="btn btn-primary">
-            <i class="fas fa-list me-2"></i>Ver Todos os Pedidos
-        </a>
-    </div>
-{% endif %}
+</div>
 {% endblock %}
 
 {% block extra_js %}
-{{ super() }}
 <script>
+let currentOrderId = null;
+
+function openStatusModal(orderId, currentStatus) {
+    currentOrderId = orderId;
+    
+    // Buscar permissões de status do funcionário
+    fetch('{{ url_for("employee.get_status_permissions") }}')
+        .then(response => response.json())
+        .then(data => {
+            const statusSelect = document.getElementById('newStatus');
+            statusSelect.innerHTML = '';
+            
+            // Adicionar opções baseadas nas permissões
+            data.allowed_statuses.forEach(status => {
+                if (status.status !== currentStatus) {
+                    const option = document.createElement('option');
+                    option.value = status.status;
+                    option.textContent = status.display_name;
+                    statusSelect.appendChild(option);
+                }
+            });
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+            modal.show();
+
+            // Disparar o evento 'change' para garantir que as opções de entrega sejam exibidas se 'entregue' for o status inicial
+            document.getElementById('newStatus').dispatchEvent(new Event('change'));
+        })
+        .catch(error => {
+            console.error('Erro ao buscar permissões:', error);
+            alert('Erro ao carregar opções de status');
+        });
+}
+
+document.getElementById('statusForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!currentOrderId) return;
+    
+    const formData = new FormData();
+    formData.append('status', document.getElementById('newStatus').value);
+    
+    // Se o status for 'entregue', incluir opções de entrega
+    if (document.getElementById('newStatus').value === 'entregue') {
+        formData.append('fonte', document.getElementById('fonte').checked);
+        formData.append('gabarito', document.getElementById('gabarito').checked);
+        formData.append('com_pistao', document.getElementById('com_pistao').checked);
+        formData.append('placa_cristal', document.getElementById('placa_cristal').checked);
+    }
+    
+    fetch(`{{ url_for("employee.change_order_status", order_id=0) }}`.replace('0', currentOrderId), {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao alterar status');
+    });
+});
+
+// Mostrar/ocultar opções de entrega baseado no status selecionado
+document.getElementById('newStatus').addEventListener('change', function() {
+    const deliveryOptions = document.getElementById('deliveryOptions');
+    if (this.value === 'entregue') {
+        deliveryOptions.style.display = 'block';
+    } else {
+        deliveryOptions.style.display = 'none';
+    }
+});
+
+// Confirmar mudanças de status
 $(document).ready(function() {
-    // Confirmar mudanças de status
-    $('form[action*="change_order_status"]').on('submit', function(e) {
-        const status = $(this).find('input[name="status"]').val();
+    $('form[action*="update_status"]').on('submit', function(e) {
+        const status = $(this).find('input[name="new_status"]').val();
         let message = '';
-        
+
         switch(status) {
             case 'em_producao':
                 message = 'Tem certeza que deseja iniciar a produção deste pedido?';
@@ -452,18 +598,11 @@ $(document).ready(function() {
                 message = 'Tem certeza que deseja marcar este pedido como entregue?';
                 break;
         }
-        
+
         if (message && !confirm(message)) {
             e.preventDefault();
         }
     });
-    
-    // Auto-refresh a cada 2 minutos
-    setInterval(function() {
-        if (!document.hidden) {
-            // location.reload();
-        }
-    }, 120000);
 });
 </script>
 {% endblock %}
