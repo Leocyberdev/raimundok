@@ -349,13 +349,11 @@ def change_order_status(order_id):
     order = Order.query.get_or_404(order_id)
 
     if not order.approved:
-        flash('Este pedido ainda não foi aprovado.', 'error')
-        return redirect(request.referrer or url_for('employee.orders'))
+        return jsonify({'success': False, 'message': 'Este pedido ainda não foi aprovado.'})
 
     new_status = request.form.get('status')
     if not new_status:
-        flash('Status não informado.', 'error')
-        return redirect(request.referrer or url_for('employee.orders'))
+        return jsonify({'success': False, 'message': 'Status não informado.'})
 
     # Verificar se o funcionário tem permissão para alterar para este status
     permission = StatusPermission.query.filter_by(
@@ -364,8 +362,10 @@ def change_order_status(order_id):
     ).first()
 
     if not permission or not permission.can_change:
-        flash(f'Você não tem permissão para alterar o status para "{new_status}".', 'error')
-        return redirect(request.referrer or url_for('employee.orders'))
+        return jsonify({
+            'success': False, 
+            'message': f'Você não tem permissão para alterar o status para "{new_status}".'
+        })
 
     old_status = order.status
 
@@ -378,8 +378,7 @@ def change_order_status(order_id):
 
         # Verificar se pelo menos uma opção foi selecionada
         if not any([fonte, gabarito, com_pistao, placa_cristal]):
-            flash('Selecione pelo menos uma opção de entrega', 'error')
-            return redirect(request.referrer or url_for('employee.orders'))
+            return jsonify({'success': False, 'message': 'Selecione pelo menos uma opção de entrega'})
 
         # Criar registro de opções de entrega
         delivery_option = DeliveryOption(
@@ -426,13 +425,15 @@ def change_order_status(order_id):
 
         db.session.commit()
 
-        flash(f'Status alterado para "{new_status}" com sucesso!', 'success')
-        return redirect(request.referrer or url_for('employee.orders'))
+        return jsonify({
+            'success': True, 
+            'message': f'Status alterado para "{new_status}" com sucesso!',
+            'new_status': new_status
+        })
 
     except Exception as e:
         db.session.rollback()
-        flash(f'Erro ao alterar status: {str(e)}', 'error')
-        return redirect(request.referrer or url_for('employee.orders'))
+        return jsonify({'success': False, 'message': f'Erro ao alterar status: {str(e)}'})
 
 # ===== ROTAS PARA PEDIDOS POR STATUS =====
 
@@ -499,51 +500,107 @@ def status_orders():
                          status_color=config['color'],
                          today=date.today)
 
+@employee_bp.route('/funcionario/pedidos/aprovados')
+@login_required
+@employee_required
+def approved_orders():
+    """Pedidos aprovados"""
+    page = request.args.get('page', 1, type=int)
+
+    # Garantir que a página seja pelo menos 1
+    if page < 1:
+        page = 1
+
+    try:
+        orders = Order.query.filter_by(status='aprovado', approved=True).order_by(Order.created_at.desc()).paginate(
+            page=page, per_page=10, error_out=False
+        )
+    except Exception as e:
+        # Em caso de erro na paginação, redirecionar para a primeira página
+        flash('Erro na paginação. Redirecionando para a primeira página.', 'warning')
+        return redirect(url_for('employee.approved_orders', page=1))
+
+    # Processar observações para cada pedido
+    for order in orders.items:
+        order.last_observations = list(order.observations)[-3:]
+
+    return render_template('employee/status_orders.html', 
+                         orders=orders, 
+                         status='aprovado',
+                         status_name='Aprovados',
+                         status_icon='fas fa-check',
+                         status_color='info',
+                         today=date.today)
+
+@employee_bp.route('/funcionario/pedidos/em-producao')
+@login_required
+@employee_required
+def in_production_orders():
+    """Pedidos em produção"""
+    page = request.args.get('page', 1, type=int)
+
+    # Garantir que a página seja pelo menos 1
+    if page < 1:
+        page = 1
+
+    try:
+        orders = Order.query.filter_by(status='em_producao', approved=True).order_by(Order.created_at.desc()).paginate(
+            page=page, per_page=10, error_out=False
+        )
+    except Exception as e:
+        # Em caso de erro na paginação, redirecionar para a primeira página
+        flash('Erro na paginação. Redirecionando para a primeira página.', 'warning')
+        return redirect(url_for('employee.in_production_orders', page=1))
+
+    # Processar observações para cada pedido
+    for order in orders.items:
+        order.last_observations = list(order.observations)[-3:]
+
+    return render_template('employee/status_orders.html', 
+                         orders=orders, 
+                         status='em_producao',
+                         status_name='Em Produção',
+                         status_icon='fas fa-cogs',
+                         status_color='primary',
+                         today=date.today)
+
 @employee_bp.route('/funcionario/pedidos/prontos')
 @login_required
 @employee_required
 def ready_orders():
-    """Página de pedidos prontos para entrega"""
+    """Pedidos prontos"""
     page = request.args.get('page', 1, type=int)
-    status_filter = request.args.get('status', '')
 
-    # Query base para pedidos prontos e entregues
-    if status_filter == 'entregue':
-        query = Order.query.filter_by(status='entregue', approved=True)
-    elif status_filter == 'pronto':
-        query = Order.query.filter_by(status='pronto', approved=True)
-    else:
-        # Mostrar ambos por padrão
-        query = Order.query.filter(
-            Order.approved == True,
-            Order.status.in_(['pronto', 'entregue'])
+    # Garantir que a página seja pelo menos 1
+    if page < 1:
+        page = 1
+
+    try:
+        orders = Order.query.filter_by(status='pronto', approved=True).order_by(Order.created_at.desc()).paginate(
+            page=page, per_page=10, error_out=False
         )
+    except Exception as e:
+        # Em caso de erro na paginação, redirecionar para a primeira página
+        flash('Erro na paginação. Redirecionando para a primeira página.', 'warning')
+        return redirect(url_for('employee.ready_orders', page=1))
 
-    orders = query.order_by(Order.delivery_date.asc()).paginate(
-        page=page, per_page=10, error_out=False)
-
-    # Processar dados adicionais para cada pedido
-    orders_with_data = []
+    # Processar observações para cada pedido
     for order in orders.items:
-        order_data = {
-            'order': order,
-            'delivery_status': get_delivery_status_text(order.delivery_date),
-            'elapsed_days': get_elapsed_days_text(order.order_date),
-            'weekday_name': get_weekday_name_pt(order.order_date),
-            'is_urgent': is_delivery_urgent(order.delivery_date)
-        }
-        orders_with_data.append(order_data)
+        order.last_observations = list(order.observations)[-3:]
 
-    return render_template('employee/ready_orders.html', 
-                         orders=orders,
-                         orders_with_data=orders_with_data,
-                         status_filter=status_filter)
+    return render_template('employee/status_orders.html', 
+                         orders=orders, 
+                         status='pronto',
+                         status_name='Prontos',
+                         status_icon='fas fa-check-double',
+                         status_color='success',
+                         today=date.today)
 
 @employee_bp.route('/funcionario/pedidos/entregues')
 @login_required
 @employee_required
 def delivered_orders():
-    """Pedidos entregues para o funcionário"""
+    """Pedidos entregues"""
     page = request.args.get('page', 1, type=int)
 
     # Apenas pedidos com status 'entregue' e que tenham data de entrega registrada
@@ -591,92 +648,3 @@ def get_status_permissions():
             })
 
     return jsonify({'allowed_statuses': allowed_statuses})
-
-
-
-
-
-@employee_bp.route('/funcionario/pedidos/prontos')
-@login_required
-@employee_required
-def ready_orders():
-    """Lista de pedidos com status 'pronto' para o funcionário"""
-    page = request.args.get('page', 1, type=int)
-    orders = Order.query.filter_by(status='pronto', approved=True).order_by(Order.delivery_date.asc()).paginate(
-        page=page, per_page=10, error_out=False)
-    return render_template('employee/ready_orders.html', orders=orders, today=date.today)
-
-@employee_bp.route('/funcionario/pedidos/<int:order_id>/marcar-entregue', methods=['POST'])
-@login_required
-@employee_required
-def mark_as_delivered(order_id):
-    """Marcar pedido como entregue com opções de entrega"""
-    from src.models.user import DeliveryOption, StatusHistory
-
-    order = Order.query.get_or_404(order_id)
-
-    if not order.approved:
-        flash('Este pedido ainda não foi aprovado.', 'error')
-        return redirect(request.referrer or url_for('employee.orders'))
-
-    if order.status != 'pronto':
-        flash('Apenas pedidos com status "Pronto" podem ser marcados como entregues.', 'error')
-        return redirect(request.referrer or url_for('employee.ready_orders'))
-
-    delivery_date_str = request.form.get('delivery_date')
-    delivery_notes = request.form.get('delivery_notes')
-    recipient_name = request.form.get('recipient_name')
-    
-    # Opções de entrega
-    fonte = request.form.get('fonte') == 'true'
-    gabarito = request.form.get('gabarito') == 'true'
-    com_pistao = request.form.get('com_pistao') == 'true'
-    placa_cristal = request.form.get('placa_cristal') == 'true'
-
-    if not delivery_date_str or not recipient_name:
-        flash('Data de entrega e nome do recebedor são obrigatórios.', 'error')
-        return redirect(request.referrer or url_for('employee.ready_orders'))
-
-    # Verificar se pelo menos uma opção foi selecionada
-    if not any([fonte, gabarito, com_pistao, placa_cristal]):
-        flash('Selecione pelo menos uma opção de entrega.', 'error')
-        return redirect(request.referrer or url_for('employee.ready_orders'))
-
-    try:
-        delivery_date = datetime.strptime(delivery_date_str, '%Y-%m-%d').date()
-    except ValueError:
-        flash('Formato de data inválido.', 'error')
-        return redirect(request.referrer or url_for('employee.ready_orders'))
-
-    # Criar registro de opções de entrega
-    delivery_option = DeliveryOption(
-        order_id=order_id,
-        fonte=fonte,
-        gabarito=gabarito,
-        com_pistao=com_pistao,
-        placa_cristal=placa_cristal,
-        created_by_id=current_user.id
-    )
-    db.session.add(delivery_option)
-
-    # Registrar histórico de alteração
-    status_history = StatusHistory(
-        order_id=order_id,
-        user_id=current_user.id,
-        old_status=order.status,
-        new_status='entregue'
-    )
-    db.session.add(status_history)
-
-    # Atualizar status do pedido
-    order.status = 'entregue'
-    order.delivered_at = datetime.now(pytz.timezone('America/Sao_Paulo'))
-    order.delivery_notes = delivery_notes
-    order.recipient_name = recipient_name
-
-    db.session.commit()
-    flash('Pedido marcado como entregue com sucesso!', 'success')
-    return redirect(url_for('employee.ready_orders'))
-
-
-
