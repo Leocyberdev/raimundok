@@ -349,7 +349,7 @@
                 </div>
                 {% endif %}
                 
-              <div class="file-upload-area" id="pdfUploadArea">
+                <div class="file-upload-area" id="pdfUploadArea">
                     <div class="file-upload-icon">
                         <i class="fas fa-cloud-upload-alt"></i>
                     </div>
@@ -359,7 +359,9 @@
                     <div class="file-upload-hint">
                         ou arraste e solte aqui (máximo 10MB)
                     </div>
-                    <input type="file" id="pdf_file" name="pdf_file" accept=".pdf,.cdr,.dxf,.zip,.rar,.xls,.xlsx,.ia,.pptx,application/pdf,application/x-coreldraw,image/vnd.dxf,application/zip,application/x-rar-compressed,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/illustrator,application/vnd.openxmlformats-officedocument.presentationml.presentation" capture="environment">
+                    <!-- CORREÇÃO: Removido o atributo capture="environment" que causava abertura da câmera no iPhone -->
+                    <input type="file" id="pdf_file" name="pdf_file" 
+                           accept=".pdf,.cdr,.dxf,.zip,.rar,.xls,.xlsx,.ia,.pptx,application/pdf,application/x-coreldraw,image/vnd.dxf,application/zip,application/x-rar-compressed,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/illustrator,application/vnd.openxmlformats-officedocument.presentationml.presentation">
                 </div>
                 
                 <div id="file-info" class="mt-3" style="display: none;">
@@ -430,26 +432,26 @@ $(document).ready(function() {
     updateEmployeeCards();
     
     // Drag and drop para upload de arquivo
-    const uploadArea = $(\".file-upload-area\");
-    const pdfFileInput = $(\"#pdf_file\");
+    const uploadArea = $(".file-upload-area");
+    const pdfFileInput = $("#pdf_file");
 
-    uploadArea.on(\'click\', function() {
+    uploadArea.on('click', function() {
         pdfFileInput.click();
     });
     
-    uploadArea.on(\'dragover\', function(e) {
+    uploadArea.on('dragover', function(e) {
         e.preventDefault();
-        $(this).addClass(\'dragover\');
+        $(this).addClass('dragover');
     });
     
-    uploadArea.on(\'dragleave\', function(e) {
+    uploadArea.on('dragleave', function(e) {
         e.preventDefault();
-        $(this).removeClass(\'dragover\');
+        $(this).removeClass('dragover');
     });
     
-    uploadArea.on(\'drop\', function(e) {
+    uploadArea.on('drop', function(e) {
         e.preventDefault();
-        $(this).removeClass(\'dragover\');
+        $(this).removeClass('dragover');
         
         const files = e.originalEvent.dataTransfer.files;
         if (files.length > 0) {
@@ -461,21 +463,25 @@ $(document).ready(function() {
         }
     });
     
-    // Mudança no input de arquivo
+    // Mudança no input de arquivo - Melhorada para compatibilidade iOS/Android
     $('#pdf_file').on('change', function() {
         const file = this.files[0];
         if (file) {
-            // Para dispositivos móveis, o atributo accept pode não funcionar perfeitamente
-            // então fazemos validação adicional via JavaScript
+            // Validação robusta que funciona tanto no iOS quanto Android
             if (validateFile(file)) {
                 showFileInfo(file);
             } else {
                 // Limpar o input se a validação falhar
                 this.value = '';
+                $('#file-info').hide();
             }
+        } else {
+            $('#file-info').hide();
         }
     });
-}function validateFile(file) {
+});
+
+function validateFile(file) {
     const validTypes = [
         'application/pdf',
         'application/x-coreldraw',
@@ -504,18 +510,19 @@ $(document).ready(function() {
     const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
     
     // Validação mais robusta: aceitar se pelo menos uma das validações passar
+    // Isso é especialmente importante para iOS que pode não reportar MIME types corretamente
     const isValidType = validTypes.includes(fileType);
     const isValidExtension = validExtensions.includes(fileExtension);
     
     if (!isValidType && !isValidExtension) {
-        alert('Por favor, selecione apenas arquivos PDF.');
+        alert('Por favor, selecione apenas arquivos nos formatos suportados (PDF, CDR, DXF, ZIP, RAR, XLS, XLSX, IA, PPTX).');
         return false;
     }
     
     // Verificar tamanho do arquivo (10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB em bytes
     if (file.size > maxSize) {
-        alert('O arquivo PDF deve ter no máximo 10MB.');
+        alert('O arquivo deve ter no máximo 10MB.');
         return false;
     }
     
