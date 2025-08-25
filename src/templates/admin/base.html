@@ -74,8 +74,8 @@
     }
 
     .user-avatar {
-        width: 35px;
-        height: 35px;
+        width: 40px;
+        height: 40px;
         background: var(--primary-color);
         border-radius: 50%;
         display: flex;
@@ -83,6 +83,15 @@
         justify-content: center;
         color: white;
         font-weight: 600;
+        font-size: 1rem;
+        margin-right: 10px;
+        overflow: hidden;
+    }
+
+    .profile-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
     /* Navegação Horizontal */
@@ -285,8 +294,15 @@
 
             <div class="dropdown user-dropdown">
                 <button class="dropdown-toggle" data-bs-toggle="dropdown">
-                    <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
-                    <span>{{ current_user.username }}</span>
+                    <div class="user-avatar">
+                        {% if current_user.profile_picture %}
+                            <img src="{{ url_for('admin.serve_profile_picture', filename=current_user.profile_picture) }}" 
+                                 alt="Foto de perfil" class="profile-image">
+                        {% else %}
+                            {{ current_user.username[0].upper() }}
+                        {% endif %}
+                    </div>
+                    <span class="user-name">{{ current_user.username }}</span>
                     <i class="fas fa-chevron-down"></i>
                 </button>
                 <ul class="dropdown-menu">
@@ -311,7 +327,7 @@
             <button class="nav-arrow" id="navPrev" onclick="scrollNav(-1)">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            
+
             <div class="nav-scroll-container">
                 <div class="nav-items" id="navItems">
                     <div class="nav-item">
@@ -420,7 +436,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <button class="nav-arrow" id="navNext" onclick="scrollNav(1)">
                 <i class="fas fa-chevron-right"></i>
             </button>
@@ -455,7 +471,7 @@ $(document).ready(function() {
     setTimeout(function() {
         $('.alert').fadeOut();
     }, 5000);
-    
+
     // Initialize navigation
     updateNavArrows();
 });
@@ -467,16 +483,16 @@ function scrollNav(direction) {
     const navItems = document.getElementById('navItems');
     const container = navItems.parentElement;
     const maxScroll = navItems.scrollWidth - container.clientWidth;
-    
+
     currentNavPosition += direction * scrollAmount;
-    
+
     // Limit scroll position
     if (currentNavPosition < 0) {
         currentNavPosition = 0;
     } else if (currentNavPosition > maxScroll) {
         currentNavPosition = maxScroll;
     }
-    
+
     navItems.style.transform = `translateX(-${currentNavPosition}px)`;
     updateNavArrows();
 }
@@ -485,10 +501,10 @@ function updateNavArrows() {
     const navItems = document.getElementById('navItems');
     const container = navItems.parentElement;
     const maxScroll = navItems.scrollWidth - container.clientWidth;
-    
+
     const prevBtn = document.getElementById('navPrev');
     const nextBtn = document.getElementById('navNext');
-    
+
     // Show/hide arrows based on scroll position
     prevBtn.disabled = currentNavPosition <= 0;
     nextBtn.disabled = currentNavPosition >= maxScroll || maxScroll <= 0;
@@ -500,4 +516,3 @@ window.addEventListener('resize', function() {
 });
 </script>
 {% endblock %}
-

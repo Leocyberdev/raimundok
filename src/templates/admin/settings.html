@@ -9,7 +9,7 @@
         max-width: 800px;
         margin: 0 auto;
     }
-    
+
     .settings-card {
         background: white;
         border-radius: 15px;
@@ -17,24 +17,24 @@
         margin-bottom: 30px;
         overflow: hidden;
     }
-    
+
     .settings-header {
         background: linear-gradient(135deg, var(--primary-color), #4f46e5);
         color: white;
         padding: 25px;
         text-align: center;
     }
-    
+
     .settings-header h2 {
         margin: 0;
         font-weight: 600;
     }
-    
+
     .settings-header p {
         margin: 10px 0 0;
         opacity: 0.9;
     }
-    
+
     .admin-profile {
         display: flex;
         align-items: center;
@@ -42,7 +42,7 @@
         margin-top: 20px;
         justify-content: center;
     }
-    
+
     .admin-avatar {
         width: 80px;
         height: 80px;
@@ -55,21 +55,21 @@
         font-size: 2rem;
         font-weight: 600;
     }
-    
+
     .admin-info h4 {
         margin: 0;
         font-weight: 600;
     }
-    
+
     .admin-info p {
         margin: 5px 0 0;
         opacity: 0.8;
     }
-    
+
     .settings-section {
         padding: 30px;
     }
-    
+
     .section-title {
         display: flex;
         align-items: center;
@@ -78,34 +78,34 @@
         padding-bottom: 10px;
         border-bottom: 2px solid #f1f5f9;
     }
-    
+
     .section-title h5 {
         margin: 0;
         font-weight: 600;
         color: var(--dark-color);
     }
-    
+
     .form-floating {
         margin-bottom: 20px;
     }
-    
+
     .form-floating .form-control {
         height: 60px;
         border: 2px solid #e2e8f0;
         border-radius: 10px;
         padding-top: 25px;
     }
-    
+
     .form-floating .form-control:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
     }
-    
+
     .form-floating label {
         color: var(--secondary-color);
         font-weight: 500;
     }
-    
+
     .password-requirements {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
@@ -113,7 +113,7 @@
         padding: 15px;
         margin-bottom: 20px;
     }
-    
+
     .requirement {
         display: flex;
         align-items: center;
@@ -122,51 +122,51 @@
         font-size: 0.9rem;
         color: var(--secondary-color);
     }
-    
+
     .requirement:last-child {
         margin-bottom: 0;
     }
-    
+
     .requirement i {
         width: 16px;
         color: var(--success-color);
     }
-    
+
     .danger-zone {
         border: 2px solid var(--danger-color);
         border-radius: 10px;
         padding: 20px;
         background: #fef2f2;
     }
-    
+
     .danger-zone h6 {
         color: var(--danger-color);
         font-weight: 600;
         margin-bottom: 10px;
     }
-    
+
     .danger-zone p {
         color: #7f1d1d;
         margin-bottom: 15px;
         font-size: 0.9rem;
     }
-    
+
     .system-info {
         background: #f8fafc;
         border-radius: 10px;
         padding: 20px;
     }
-    
+
     .info-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 20px;
     }
-    
+
     .info-item {
         text-align: center;
     }
-    
+
     .info-label {
         font-size: 0.8rem;
         color: var(--secondary-color);
@@ -175,32 +175,63 @@
         letter-spacing: 0.5px;
         margin-bottom: 5px;
     }
-    
+
     .info-value {
         font-weight: 600;
         color: var(--dark-color);
         font-size: 1.1rem;
     }
-    
+
     .btn-save {
         width: 100%;
         height: 50px;
         font-weight: 600;
         margin-top: 10px;
     }
-    
+
+    .profile-preview {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid var(--primary-color);
+    }
+
+    .profile-placeholder {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        font-weight: 600;
+    }
+
+    .card-body .form-text {
+        font-size: 0.85rem;
+    }
+
     @media (max-width: 768px) {
         .admin-profile {
             flex-direction: column;
             text-align: center;
         }
-        
+
         .settings-section {
             padding: 20px;
         }
-        
+
         .info-grid {
             grid-template-columns: 1fr;
+        }
+
+        .profile-preview, .profile-placeholder {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
         }
     }
 </style>
@@ -213,7 +244,7 @@
         <div class="settings-header">
             <h2>Configurações do Administrador</h2>
             <p>Gerencie suas configurações e preferências do sistema</p>
-            
+
             <div class="admin-profile">
                 <div class="admin-avatar">
                     {{ current_user.username[0].upper() }}
@@ -225,7 +256,45 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Foto de Perfil -->
+    <div class="settings-card mb-4">
+        <div class="settings-header">
+            <h5 class="mb-0">
+                <i class="fas fa-user-circle me-2"></i>Foto de Perfil
+            </h5>
+        </div>
+        <div class="settings-section">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    <div class="current-profile-picture">
+                        {% if current_user.profile_picture %}
+                            <img src="{{ url_for('admin.serve_profile_picture', filename=current_user.profile_picture) }}" 
+                                 alt="Foto atual" class="profile-preview">
+                        {% else %}
+                            <div class="profile-placeholder">
+                                {{ current_user.username[0].upper() }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <form method="POST" action="{{ url_for('admin.upload_profile_picture') }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="profile_picture" class="form-label">Escolher nova foto</label>
+                            <input type="file" class="form-control" id="profile_picture" name="profile_picture" 
+                                   accept="image/png,image/jpg,image/jpeg,image/gif,image/webp">
+                            <div class="form-text">Formatos aceitos: PNG, JPG, JPEG, GIF, WEBP (máx. 5MB)</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Atualizar Foto
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Alterar Senha -->
     <div class="settings-card">
         <div class="settings-section">
@@ -233,7 +302,7 @@
                 <i class="fas fa-lock text-primary"></i>
                 <h5>Alterar Senha</h5>
             </div>
-            
+
             <div class="password-requirements">
                 <h6 class="mb-3">
                     <i class="fas fa-shield-alt me-2"></i>Requisitos de Segurança
@@ -255,7 +324,7 @@
                     <span>Diferente da senha atual</span>
                 </div>
             </div>
-            
+
             <form id="changePasswordForm" method="POST" action="{{ url_for('admin.change_password') }}">
                 <div class="form-floating">
                     <input type="password" class="form-control" id="current_password" name="current_password" 
@@ -264,7 +333,7 @@
                         <i class="fas fa-key me-2"></i>Senha Atual
                     </label>
                 </div>
-                
+
                 <div class="form-floating">
                     <input type="password" class="form-control" id="new_password" name="new_password" 
                            placeholder="Nova senha" required minlength="6">
@@ -272,7 +341,7 @@
                         <i class="fas fa-lock me-2"></i>Nova Senha
                     </label>
                 </div>
-                
+
                 <div class="form-floating">
                     <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
                            placeholder="Confirmar nova senha" required>
@@ -283,14 +352,14 @@
                         As senhas não coincidem
                     </div>
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary btn-save">
                     <i class="fas fa-save me-2"></i>Alterar Senha
                 </button>
             </form>
         </div>
     </div>
-    
+
     <!-- Informações do Sistema -->
     <div class="settings-card">
         <div class="settings-section">
@@ -298,7 +367,7 @@
                 <i class="fas fa-info-circle text-info"></i>
                 <h5>Informações do Sistema</h5>
             </div>
-            
+
             <div class="system-info">
                 <div class="info-grid">
                     <div class="info-item">
@@ -320,7 +389,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Configurações Avançadas -->
     <div class="settings-card">
         <div class="settings-section">
@@ -328,7 +397,7 @@
                 <i class="fas fa-cogs text-warning"></i>
                 <h5>Configurações Avançadas</h5>
             </div>
-            
+
             <div class="row">
                 <div class="col-md-6">
                     <div class="card">
@@ -342,7 +411,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body text-center">
@@ -358,7 +427,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Zona de Perigo -->
     <div class="settings-card">
         <div class="settings-section">
@@ -366,7 +435,7 @@
                 <i class="fas fa-exclamation-triangle text-danger"></i>
                 <h5>Zona de Perigo</h5>
             </div>
-            
+
             <div class="danger-zone">
                 <h6>
                     <i class="fas fa-trash-alt me-2"></i>Limpar Dados do Sistema
@@ -390,12 +459,12 @@
 $(document).ready(function() {
     const newPasswordInput = $("#new_password");
     const confirmPasswordInput = $("#confirm_password");
-    
+
     // Verificar se senhas coincidem
     confirmPasswordInput.on("input", function() {
         const newPassword = newPasswordInput.val();
         const confirmPassword = $(this).val();
-        
+
         if (confirmPassword.length > 0) {
             if (newPassword === confirmPassword) {
                 $(this).removeClass("is-invalid").addClass("is-valid");
@@ -406,34 +475,34 @@ $(document).ready(function() {
             $(this).removeClass("is-valid is-invalid");
         }
     });
-    
+
     // Validação do formulário de senha
     $("#changePasswordForm").on("submit", function(e) {
         const currentPassword = $("#current_password").val();
         const newPassword = newPasswordInput.val();
         const confirmPassword = confirmPasswordInput.val();
-        
+
         if (newPassword.length < 6) {
             e.preventDefault();
             alert("A nova senha deve ter pelo menos 6 caracteres.");
             newPasswordInput.focus();
             return false;
         }
-        
+
         if (newPassword !== confirmPassword) {
             e.preventDefault();
             alert("As senhas não coincidem.");
             confirmPasswordInput.focus();
             return false;
         }
-        
+
         if (currentPassword === newPassword) {
             e.preventDefault();
             alert("A nova senha deve ser diferente da senha atual.");
             newPasswordInput.focus();
             return false;
         }
-        
+
         // Mostrar loading
         const submitBtn = $(this).find("button[type=\"submit\"]");
         submitBtn.prop("disabled", true);
@@ -447,11 +516,11 @@ function backupSystem() {
         const form = document.createElement("form");
         form.method = "POST";
         form.action = "{{ url_for('admin.backup_system') }}"; // Aponta para a rota correta
-        
+
         // Adicionar o formulário à página e submetê-lo
         document.body.appendChild(form);
         form.submit();
-        
+
         // Remover o formulário após o envio
         document.body.removeChild(form);
     }
@@ -475,4 +544,3 @@ function confirmClearData() {
 }
 </script>
 {% endblock %}
-

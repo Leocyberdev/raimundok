@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_from_directory
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from datetime import datetime, date
@@ -419,6 +419,66 @@ def change_password():
         flash('Senha alterada com sucesso!', 'success')
 
     return redirect(url_for('admin.settings'))
+
+@admin_bp.route('/admin/configuracoes/foto-perfil', methods=['POST'])
+@login_required
+@admin_required
+def upload_profile_picture():
+    """Upload da foto de perfil do admin"""
+    if 'profile_picture' not in request.files:
+        flash('Nenhum arquivo selecionado!', 'error')
+        return redirect(url_for('admin.settings'))
+    
+    file = request.files['profile_picture']
+    
+    if file.filename == '':
+        flash('Nenhum arquivo selecionado!', 'error')
+        return redirect(url_for('admin.settings'))
+    
+    # Verificar se é uma imagem válida
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+    
+    if file_extension not in allowed_extensions:
+        flash('Formato de arquivo inválido! Use PNG, JPG, JPEG, GIF ou WEBP.', 'error')
+        return redirect(url_for('admin.settings'))
+    
+    try:
+        # Remover foto anterior se existir
+        if current_user.profile_picture:
+            old_photo_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profiles', current_user.profile_picture)
+            if os.path.exists(old_photo_path):
+                os.remove(old_photo_path)
+        
+        # Criar diretório de perfis se não existir
+        profile_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profiles')
+        os.makedirs(profile_dir, exist_ok=True)
+        
+        # Salvar nova foto
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now(pytz.timezone("America/Sao_Paulo")).strftime("%Y%m%d_%H%M%S_")
+        profile_filename = f"{timestamp}profile_{current_user.id}_{filename}"
+        
+        file_path = os.path.join(profile_dir, profile_filename)
+        file.save(file_path)
+        
+        # Atualizar banco de dados
+        current_user.profile_picture = profile_filename
+        db.session.commit()
+        
+        flash('Foto de perfil atualizada com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'Erro ao fazer upload da foto: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.settings'))
+
+@admin_bp.route('/uploads/profiles/<filename>')
+@login_required
+def serve_profile_picture(filename):
+    """Servir imagens de perfil"""
+    profile_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profiles')
+    return send_from_directory(profile_dir, filename)
 
 @admin_bp.route('/admin/calendario')
 @login_required

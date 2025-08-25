@@ -15,7 +15,7 @@ class User(UserMixin, db.Model):
         db.DateTime,
         default=lambda: datetime.now(pytz.timezone("America/Sao_Paulo"))
     )
-
+    profile_picture = db.Column(db.String(200), nullable=True)  # Nome do arquivo da foto de perfil
     is_active = db.Column(db.Boolean, default=True)    
     # Relacionamentos
     orders_created = db.relationship('Order', foreign_keys='Order.created_by_id', backref='created_by', lazy='dynamic')
@@ -47,7 +47,8 @@ class User(UserMixin, db.Model):
             'username': self.username,
             'user_type': self.user_type,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'is_active': self.is_active
+            'is_active': self.is_active,
+            'profile_picture': self.profile_picture
         }
 
 class Order(db.Model):
