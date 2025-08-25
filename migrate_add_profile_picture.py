@@ -13,19 +13,21 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from src.main import app
 from src.models.user import db
+from sqlalchemy import text
 
 def migrate_database():
     with app.app_context():
         try:
             # Verificar se a coluna já existe
-            inspector = db.inspect(db.engine)
-            columns = [col['name'] for col in inspector.get_columns('user')]
+            result = db.session.execute(text("PRAGMA table_info(user)")).fetchall()
+            columns = [row[1] for row in result]
             
             if 'profile_picture' not in columns:
                 print("Adicionando coluna profile_picture à tabela user...")
                 
                 # Adicionar a coluna profile_picture
-                db.engine.execute('ALTER TABLE user ADD COLUMN profile_picture VARCHAR(200)')
+                db.session.execute(text('ALTER TABLE user ADD COLUMN profile_picture VARCHAR(200)'))
+                db.session.commit()
                 
                 print("✅ Coluna profile_picture adicionada com sucesso!")
             else:
@@ -33,6 +35,7 @@ def migrate_database():
                 
         except Exception as e:
             print(f"❌ Erro ao migrar banco de dados: {e}")
+            db.session.rollback()
             sys.exit(1)
 
 if __name__ == '__main__':
