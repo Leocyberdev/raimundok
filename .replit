@@ -10,3 +10,15 @@ run = ["sh", "-c", "python undefined"]
 [[ports]]
 localPort = 5003
 externalPort = 80
+
+[workflows]
+runButton = "Run"
+
+[[workflows.workflow]]
+name = "Run"
+author = 46241120
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python src/main.py"
