@@ -458,10 +458,10 @@ def change_order_status(order_id):
 
     # Se o status for 'entregue', verificar se as opções de entrega foram fornecidas
     if new_status == 'entregue':
-        fonte = request.form.get('fonte') == 'true'
-        gabarito = request.form.get('gabarito') == 'true'
-        com_pistao = request.form.get('com_pistao') == 'true'
-        placa_cristal = request.form.get('placa_cristal') == 'true'
+        fonte = request.form.get('fonte') in ['true', 'on']
+        gabarito = request.form.get('gabarito') in ['true', 'on']
+        com_pistao = request.form.get('com_pistao') in ['true', 'on']
+        placa_cristal = request.form.get('placa_cristal') in ['true', 'on']
 
         # Verificar se pelo menos uma opção foi selecionada
         if not any([fonte, gabarito, com_pistao, placa_cristal]):
