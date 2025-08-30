@@ -329,7 +329,7 @@
                     </div>
                     <div class="meta-item">
                         <i class="fas fa-calendar"></i>
-                        <span>{{ order.created_at | format_datetime ('%d/%m/%Y às %H:%M') }}</span>
+                        <span>{{ order.created_at | format_datetime_br }}</span>
                     </div>
                 </div>
             </div>
@@ -478,7 +478,7 @@
                                                     </p>
                                                 </div>
                                                 <small class="text-muted">
-                                                    {{ history.created_at | format_datetime ('%d/%m/%Y %H:%M') }}
+                                                    {{ history.created_at | format_datetime_br }}
                                                 </small>
                                             </div>
                                         </div>
@@ -533,7 +533,7 @@
                             <div class="mt-2">
                                 <small class="text-muted">
                                     <i class="fas fa-user me-1"></i>
-                                    Registrado por: {{ delivery.created_by.username }}
+                                    Registrado por: {{ delivery.created_by.username }} em {{ delivery.created_at | format_datetime_br }}
                                 </small>
                             </div>
                         </div>
@@ -608,7 +608,7 @@
                             </div>
                         </div>
                         <div class="observation-date">
-                            {{ observation.created_at | format_datetime ('%d/%m/%Y às %H:%M') }}
+                            {{ observation.created_at | format_datetime_br }}
                         </div>
                     </div>
                     <div class="observation-content">

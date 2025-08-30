@@ -284,7 +284,7 @@
                         {% if order.subtitle %}
                             <p class="mb-1 text-muted" style="font-size: 0.9rem; margin: 0.25rem 0;">{{ order.subtitle }}</p>
                         {% endif %}
-                        <small>Pedido #{{ order.id }} • Criado por {{ order.created_by.username }}</small>
+                        <small>Pedido #{{ order.id }} • Criado por {{ order.created_by.username }} em {{ order.created_at | format_datetime_br('%d/%m/%Y') }}</small>
                     </div>
                 </div>
 

@@ -265,18 +265,29 @@ def format_bytes_filter(value):
 
 import pytz
 
-def format_datetime_br(value):
+def format_datetime_br(value, format='%d/%m/%Y às %H:%M'):
     """Filtro para formatação de datetime no fuso horário brasileiro"""
-    if value:
+    if not value:
+        return ""
+    
+    try:
+        br_tz = pytz.timezone('America/Sao_Paulo')
+        
         if hasattr(value, 'astimezone'):
             # Se já tem timezone info, converte para o fuso brasileiro
-            br_tz = pytz.timezone('America/Sao_Paulo')
+            if value.tzinfo is None:
+                # Se é naive datetime, assume UTC
+                utc = pytz.timezone('UTC')
+                value = utc.localize(value)
             local_time = value.astimezone(br_tz)
         else:
-            # Se não tem timezone, assume UTC e converte
-            utc = pytz.timezone('UTC')
-            br_tz = pytz.timezone('America/Sao_Paulo')
-            utc_time = utc.localize(value)
-            local_time = utc_time.astimezone(br_tz)
-        return local_time.strftime('%d/%m/%Y às %H:%M')
+            # Se não é datetime, retorna como string
+            return str(value)
+            
+        return local_time.strftime(format)
+    except:
+        return str(value)
+
+# Registrar o filtro
+app.jinja_env.filters['format_datetime_br'] = format_datetime_br.strftime('%d/%m/%Y às %H:%M')
     return ''

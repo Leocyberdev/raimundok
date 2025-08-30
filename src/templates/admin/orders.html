@@ -273,7 +273,7 @@
                         </td>
                         <td>
                             <strong>{{ order.order_date.strftime('%d/%m/%Y') }}</strong><br>
-                            <small class="text-muted">{{ order.created_at.strftime('%H:%M') }}</small>
+                            <small class="text-muted">{{ order.created_at | format_datetime_br('%H:%M') }}</small>
                         </td>
                         <td>
                             <strong>{{ order.delivery_date.strftime('%d/%m/%Y') }}</strong><br>
@@ -281,7 +281,7 @@
                         </td>
                         <td>
                             <strong>{{ order.created_by.username }}</strong><br>
-                            <small class="text-muted">{{ order.created_at.strftime('%d/%m/%Y') }}</small>
+                            <small class="text-muted">{{ order.created_at | format_datetime_br('%d/%m/%Y') }}</small>
                         </td>
                         <td>
                             {% if order.is_urgent and order.status != 'entregue' %}

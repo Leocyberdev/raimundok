@@ -443,7 +443,7 @@
                             {% set aprovado_history = status_history | selectattr('new_status', 'equalto', 'aprovado') | first %}
                             {% if aprovado_history %}
                                 por {{ aprovado_history.user.username }}
-                                <br><small class="text-muted">{{ aprovado_history.created_at | format_datetime }}</small>
+                                <br><small class="text-muted">{{ aprovado_history.created_at | format_datetime_br }}</small>
                             {% else %}
                                 por {{ order.created_by.username }}
                             {% endif %}
@@ -461,7 +461,7 @@
                             {% set producao_history = status_history | selectattr('new_status', 'equalto', 'em_producao') | first %}
                             {% if producao_history %}
                                 por {{ producao_history.user.username }}
-                                <br><small class="text-muted">{{ producao_history.created_at |format_datetime }}</small>
+                                <br><small class="text-muted">{{ producao_history.created_at | format_datetime_br }}</small>
                             {% endif %}
                         </div>
                     </div>
@@ -477,8 +477,7 @@
                             {% set pronto_history = status_history | selectattr('new_status', 'equalto', 'pronto') | first %}
                             {% if pronto_history %}
                                 por {{ pronto_history.user.username }}
-                                <br><small class="text-muted">{{ pronto_history.created_at | format_datetime }}</small>
-
+                                <br><small class="text-muted">{{ pronto_history.created_at | format_datetime_br }}</small>
                             {% endif %}
                         </div>
                     </div>
@@ -577,7 +576,7 @@
                     <div class="recommendation-content">
                         <div class="recommendation-text">{{ observation.content }}</div>
                         <small class="text-muted">
-                            por {{ observation.author.username }} em {{ observation.created_at | format_datetime }}
+                            por {{ observation.author.username }} em {{ observation.created_at | format_datetime_br }}
                         </small>
                     </div>
                 </div>
@@ -603,7 +602,7 @@
                             {% endif %}
                         </div>
                         <small class="text-muted">
-                            por {{ delivery.created_by.username }} em {{ delivery.created_at | format_datetime }}
+                            por {{ delivery.created_by.username }} em {{ delivery.created_at | format_datetime_br }}
                         </small>
                     </div>
                 </div>
