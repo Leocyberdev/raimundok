@@ -1,0 +1,643 @@
+{% extends "employee/base.html" %}
+
+{% block page_title %}Perfil{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .profile-header {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 30px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3);
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        font-weight: 600;
+        margin: 0 auto 20px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+        position: relative;
+        cursor: pointer;
+    }
+    
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .profile-upload-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .profile-avatar:hover .profile-upload-overlay {
+        opacity: 1;
+    }
+    
+    .upload-form-section {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+    }
+    
+    .profile-name {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+    }
+    
+    .profile-role {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+    
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin-top: 5px;
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+    
+    .info-header {
+        background: #f8fafc;
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .info-title {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .info-content {
+        padding: 25px;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        color: var(--secondary-color);
+        font-weight: 500;
+    }
+    
+    .info-value {
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .activity-icon.comment {
+        background: #3b82f6;
+    }
+    
+    .activity-icon.view {
+        background: #10b981;
+    }
+    
+    .activity-icon.login {
+        background: #06b6d4;
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-title {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin: 0 0 5px 0;
+    }
+    
+    .activity-description {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    
+    .activity-time {
+        color: var(--secondary-color);
+        font-size: 0.8rem;
+        text-align: right;
+    }
+    
+    .achievement-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 5px;
+    }
+    
+    .achievement-badge.gold {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+    
+    .achievement-badge.silver {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+    }
+    
+    .preferences-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    
+    .preference-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .preference-item:last-child {
+        border-bottom: none;
+    }
+    
+    .preference-label {
+        font-weight: 500;
+        color: var(--dark-color);
+    }
+    
+    .preference-description {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+        margin-top: 2px;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .info-row {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+            gap: 5px;
+        }
+        
+        .activity-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 10px;
+        }
+        
+        .activity-time {
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block employee_content %}
+<div class="profile-container">
+    <!-- Header do Perfil -->
+    <div class="profile-header">
+        <div class="profile-avatar" onclick="document.getElementById('profilePictureInput').click();">
+            {% if current_user.profile_picture %}
+                <img src="{{ url_for('admin.serve_profile_picture', filename=current_user.profile_picture) }}" 
+                     alt="Foto de perfil">
+            {% else %}
+                {{ current_user.username[0].upper() }}
+            {% endif %}
+            <div class="profile-upload-overlay">
+                <i class="fas fa-camera fa-2x"></i>
+            </div>
+        </div>
+        
+        <!-- Formulário de Upload (Invisível) -->
+        <form id="profileUploadForm" method="POST" action="{{ url_for('employee.upload_profile_picture') }}" 
+              enctype="multipart/form-data" style="display: none;">
+            <input type="file" id="profilePictureInput" name="profile_picture" 
+                   accept="image/png,image/jpg,image/jpeg,image/gif,image/webp"
+                   onchange="document.getElementById('profileUploadForm').submit();">
+        </form>
+        <h1 class="profile-name">{{ current_user.username }}</h1>
+        <p class="profile-role">Funcionário do Sistema</p>
+        
+        <div class="profile-stats">
+            <div class="stat-item">
+                <h3 class="stat-number">{{ observations_count }}</h3>
+                <p class="stat-label">Observações</p>
+            </div>
+            <div class="stat-item">
+               <h3 class="stat-number">{{ (now - current_user.created_at).days if current_user.created_at else 0 }}</h3>                <p class="stat-label">Dias no Sistema</p>
+            </div>
+            <div class="stat-item">
+                <h3 class="stat-number">100%</h3>
+                <p class="stat-label">Disponibilidade</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informações da Conta -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-user"></i>
+                Informações da Conta
+            </h5>
+        </div>
+        <div class="info-content">
+            <div class="info-row">
+                <span class="info-label">Nome de Usuário</span>
+                <span class="info-value">{{ current_user.username }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Tipo de Conta</span>
+                <span class="info-value">
+                    <span class="badge bg-primary">Funcionário</span>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status da Conta</span>
+                <span class="info-value">
+                    <span class="badge bg-success">
+                        <i class="fas fa-check me-1"></i>Ativa
+                    </span>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Membro desde</span>
+                <span class="info-value">
+                    {{ current_user.created_at | format_datetime ('%d/%m/%Y') if current_user.created_at else 'N/A' }}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Último Acesso</span>
+                <span class="info-value">{{ now | format_datetime }}</span>           </div>
+        </div>
+    </div>
+    
+    <!-- Conquistas -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-trophy"></i>
+                Conquistas e Badges
+            </h5>
+        </div>
+        <div class="info-content">
+            <div class="text-center">
+                <div class="achievement-badge gold">
+                    <i class="fas fa-star"></i>
+                    Funcionário Ativo
+                </div>
+                <div class="achievement-badge">
+                    <i class="fas fa-comments"></i>
+                    Comunicador
+                </div>
+                <div class="achievement-badge silver">
+                    <i class="fas fa-clock"></i>
+                    Pontual
+                </div>
+                {% if observations_count >= 10 %}
+                <div class="achievement-badge">
+                    <i class="fas fa-comment-dots"></i>
+                    Observador Expert
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4">
+                <h6 class="mb-3">Próximas Conquistas</h6>
+                <div class="progress mb-2">
+                    <div class="progress-bar" role="progressbar" style="width: {{ (observations_count / 20 * 100) | round }}%">
+                        {{ observations_count }}/20 observações
+                    </div>
+                </div>
+                <small class="text-muted">
+                    Faça {{ 20 - observations_count }} observações para desbloquear "Observador Master"
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Atividade Recente -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-history"></i>
+                Atividade Recente
+            </h5>
+        </div>
+        <div class="info-content">
+            <div class="activity-item">
+                <div class="activity-icon login">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
+                <div class="activity-content">
+                    <h6 class="activity-title">Login no Sistema</h6>
+                    <p class="activity-description">Acesso realizado com sucesso</p>
+                </div>
+                <div class="activity-time">{{ now | format_datetime("%H:%M") }}</div>
+            </div>
+            
+            {% if observations_count > 0 %}
+            <div class="activity-item">
+                <div class="activity-icon comment">
+                    <i class="fas fa-comment"></i>
+                </div>
+                <div class="activity-content">
+                    <h6 class="activity-title">Observação Adicionada</h6>
+                    <p class="activity-description">Nova observação em pedido</p>
+                </div>
+                <div class="activity-time">
+                    Recente
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="activity-item">
+                <div class="activity-icon view">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="activity-content">
+                    <h6 class="activity-title">Visualização de Pedidos</h6>
+                    <p class="activity-description">Acessou lista de pedidos</p>
+                </div>
+                <div class="activity-time">
+                    Hoje
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Preferências -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-cog"></i>
+                Preferências
+            </h5>
+        </div>
+        <div class="info-content">
+            <div class="preferences-section">
+                <div>
+                    <div class="preference-item">
+                        <div>
+                            <div class="preference-label">Notificações por Email</div>
+                            <div class="preference-description">Receber emails sobre novos pedidos</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                        </div>
+                    </div>
+                    
+                    <div class="preference-item">
+                        <div>
+                            <div class="preference-label">Som de Notificação</div>
+                            <div class="preference-description">Reproduzir som ao receber notificações</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="soundNotifications">
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="preference-item">
+                        <div>
+                            <div class="preference-label">Atualização Automática</div>
+                            <div class="preference-description">Atualizar dados automaticamente</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                        </div>
+                    </div>
+                    
+                    <div class="preference-item">
+                        <div>
+                            <div class="preference-label">Modo Compacto</div>
+                            <div class="preference-description">Interface mais compacta</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="compactMode">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <button class="btn btn-primary" onclick="savePreferences()">
+                    <i class="fas fa-save me-2"></i>Salvar Preferências
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upload de Foto de Perfil -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-camera"></i>
+                Foto de Perfil
+            </h5>
+        </div>
+        <div class="info-content">
+            <div class="upload-form-section">
+                <p><i class="fas fa-info-circle text-info me-2"></i>Clique no avatar acima ou use o formulário abaixo para alterar sua foto</p>
+                <form method="POST" action="{{ url_for('employee.upload_profile_picture') }}" 
+                      enctype="multipart/form-data" class="row align-items-end">
+                    <div class="col-md-8">
+                        <label for="manualProfilePicture" class="form-label">Escolher foto</label>
+                        <input type="file" class="form-control" id="manualProfilePicture" name="profile_picture" 
+                               accept="image/png,image/jpg,image/jpeg,image/gif,image/webp">
+                        <small class="form-text text-muted">Formatos: PNG, JPG, JPEG, GIF, WEBP</small>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-upload me-2"></i>Enviar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-bolt"></i>
+                Ações Rápidas
+            </h5>
+        </div>
+        <div class="info-content">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <a href="{{ url_for('employee.orders') }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-list me-2"></i>Ver Pedidos
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a href="{{ url_for('employee.calendar') }}" class="btn btn-outline-info w-100">
+                        <i class="fas fa-calendar me-2"></i>Calendário
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a href="{{ url_for('employee.notifications') }}" class="btn btn-outline-warning w-100">
+                        <i class="fas fa-bell me-2"></i>Notificações
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+function savePreferences() {
+    const preferences = {
+        emailNotifications: $('#emailNotifications').is(':checked'),
+        soundNotifications: $('#soundNotifications').is(':checked'),
+        autoRefresh: $('#autoRefresh').is(':checked'),
+        compactMode: $('#compactMode').is(':checked')
+    };
+    
+    // Salvar no localStorage por enquanto
+    localStorage.setItem('employeePreferences', JSON.stringify(preferences));
+    
+    // Mostrar feedback
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check me-2"></i>Salvo!';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-primary');
+    }, 2000);
+}
+
+$(document).ready(function() {
+    // Carregar preferências salvas
+    const savedPreferences = localStorage.getItem('employeePreferences');
+    if (savedPreferences) {
+        const preferences = JSON.parse(savedPreferences);
+        $('#emailNotifications').prop('checked', preferences.emailNotifications);
+        $('#soundNotifications').prop('checked', preferences.soundNotifications);
+        $('#autoRefresh').prop('checked', preferences.autoRefresh);
+        $('#compactMode').prop('checked', preferences.compactMode);
+    }
+    
+    // Aplicar modo compacto se ativado
+    if ($('#compactMode').is(':checked')) {
+        $('body').addClass('compact-mode');
+    }
+    
+    $('#compactMode').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('body').addClass('compact-mode');
+        } else {
+            $('body').removeClass('compact-mode');
+        }
+    });
+});
+</script>
+{% endblock %}
+
