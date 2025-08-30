@@ -507,7 +507,7 @@ function openStatusModal(orderId, currentStatus) {
     currentOrderId = orderId;
     
     // Buscar permissões de status do funcionário
-    fetch('{{ url_for("employee.get_status_permissions") }}')
+    fetch('{{ url_for("employee.get_status_permissions_alt") }}')
         .then(response => response.json())
         .then(data => {
             const statusSelect = document.getElementById('newStatus');
@@ -583,23 +583,19 @@ document.getElementById('newStatus').addEventListener('change', function() {
 
 // Confirmar mudanças de status
 $(document).ready(function() {
-    $('form[action*="u
-
-<script>
-$(document).ready(function() {
-    $(\'form[action*="update_status"]\').on(\'submit\', function(e) {
-        const status = $(this).find(\'input[name="new_status"]\').val();
-        let message = \'\';
+    $('form[action*="update_status"]').on('submit', function(e) {
+        const status = $(this).find('input[name="new_status"]').val();
+        let message = '';
 
         switch(status) {
-            case \'em_producao\':
-                message = \'Tem certeza que deseja iniciar a produção deste pedido?\';
+            case 'em_producao':
+                message = 'Tem certeza que deseja iniciar a produção deste pedido?';
                 break;
-            case \'pronto\':
-                message = \'Tem certeza que deseja marcar este pedido como pronto?\';
+            case 'pronto':
+                message = 'Tem certeza que deseja marcar este pedido como pronto?';
                 break;
-            case \'entregue\':
-                message = \'Tem certeza que deseja marcar este pedido como entregue?\';
+            case 'entregue':
+                message = 'Tem certeza que deseja marcar este pedido como entregue?';
                 break;
         }
 
@@ -608,6 +604,5 @@ $(document).ready(function() {
         }
     });
 });
-</script>
 {% endblock %}
 

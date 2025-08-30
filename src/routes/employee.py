@@ -736,6 +736,14 @@ def get_status_permissions():
 
     return jsonify({'allowed_statuses': allowed_statuses})
 
+# Rota alternativa para compatibilidade com o template
+@employee_bp.route('/funcionario/get_status_permissions')
+@login_required
+@employee_required
+def get_status_permissions_alt():
+    """Rota alternativa para permissões de status"""
+    return get_status_permissions()
+
 @employee_bp.route('/funcionario/ordem-servico/<int:service_order_id>/download-files')
 @login_required
 @employee_required
