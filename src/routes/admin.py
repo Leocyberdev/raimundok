@@ -138,22 +138,36 @@ def orders():
 @admin_required
 def approve_order(order_id):
     """Aprovar pedido"""
-    order = Order.query.get_or_404(order_id)
-    order.approved = True
-    order.status = 'aprovado'
+    try:
+        order = Order.query.get_or_404(order_id)
+        order.approved = True
+        order.status = 'aprovado'
 
-    # Notificar funcionários
-    employees = User.query.filter_by(user_type='funcionario', is_active=True).all()
-    for employee in employees:
-        notification = Notification(
-            user_id=employee.id,
-            title='Novo pedido aprovado',
-            message=f'O pedido da empresa {order.company_name} foi aprovado e está disponível para produção.'
-        )
-        db.session.add(notification)
+        # Notificar funcionários
+        employees = User.query.filter_by(user_type='funcionario', is_active=True).all()
+        for employee in employees:
+            # Garantir que a mensagem seja tratada como UTF-8
+            company_name = order.company_name.encode('utf-8').decode('utf-8') if order.company_name else 'Empresa'
+            notification = Notification(
+                user_id=employee.id,
+                title='Novo pedido aprovado',
+                message=f'O pedido da empresa {company_name} foi aprovado e esta disponivel para producao.'
+            )
+            db.session.add(notification)
 
-    db.session.commit()
-    flash('Pedido aprovado com sucesso!', 'success')
+        db.session.commit()
+        flash('Pedido aprovado com sucesso!', 'success')
+        
+    except UnicodeEncodeError as e:
+        db.session.rollback()
+        flash('Erro de codificação ao aprovar pedido. Tente novamente.', 'error')
+        current_app.logger.error(f'Erro Unicode ao aprovar pedido {order_id}: {str(e)}')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash('Erro ao aprovar pedido. Tente novamente.', 'error')
+        current_app.logger.error(f'Erro ao aprovar pedido {order_id}: {str(e)}')
+        
     return redirect(url_for('admin.orders'))
 
 @admin_bp.route('/admin/pedidos/<int:order_id>/excluir', methods=['POST'])
@@ -264,10 +278,12 @@ def update_order_status_quick(order_id):
         # Notificar funcionários sobre entrega
         employees = User.query.filter_by(user_type='funcionario', is_active=True).all()
         for employee in employees:
+            # Garantir que a mensagem seja tratada como UTF-8
+            company_name = order.company_name.encode('utf-8').decode('utf-8') if order.company_name else 'Empresa'
             notification = Notification(
                 user_id=employee.id,
                 title='Pedido Entregue',
-                message=f'O pedido da empresa {order.company_name} foi entregue com sucesso.'
+                message=f'O pedido da empresa {company_name} foi entregue com sucesso.'
             )
             db.session.add(notification)
 
@@ -697,10 +713,12 @@ def create_service_order(order_id):
                 service_order.assigned_employees.append(employee)
 
                 # Criar notificação para o funcionário
+                # Garantir que a mensagem seja tratada como UTF-8
+                safe_title = title.encode('utf-8').decode('utf-8') if title else 'Nova Ordem'
                 notification = Notification(
                     user_id=employee.id,
-                    title='Nova Ordem de Serviço',
-                    message=f'Você recebeu uma nova ordem de serviço: {title}'
+                    title='Nova Ordem de Servico',
+                    message=f'Voce recebeu uma nova ordem de servico: {safe_title}'
                 )
                 db.session.add(notification)
 
