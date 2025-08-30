@@ -715,19 +715,42 @@ if (typeof window.statusOrdersInitialized === 'undefined') {
 
 // Função para navegação com setas
 function scrollNav(direction) {
-    const container = document.querySelector('.table-responsive'); // Busca o container correto
-    if (!container) {
+    // Primeiro tenta encontrar o container da navegação no base.html
+    const navContainer = document.querySelector('.nav-scroll-container');
+    if (navContainer) {
+        const navItems = document.getElementById('navItems');
+        if (navItems) {
+            const scrollAmount = 200;
+            const currentTransform = navItems.style.transform;
+            const currentTranslate = currentTransform ? parseInt(currentTransform.match(/-?\d+/)?.[0]) || 0 : 0;
+            
+            let newTranslate = currentTranslate;
+            if (direction === -1) { // left
+                newTranslate = Math.max(0, currentTranslate - scrollAmount);
+            } else if (direction === 1) { // right
+                const maxScroll = navItems.scrollWidth - navContainer.clientWidth;
+                newTranslate = Math.min(maxScroll, currentTranslate + scrollAmount);
+            }
+            
+            navItems.style.transform = `translateX(-${newTranslate}px)`;
+            updateNavArrows();
+            return;
+        }
+    }
+    
+    // Fallback para tabelas (caso existam)
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer) {
+        const scrollAmount = 300;
+        if (direction === -1) {
+            tableContainer.scrollLeft -= scrollAmount;
+        } else if (direction === 1) {
+            tableContainer.scrollLeft += scrollAmount;
+        }
+        updateNavArrows();
+    } else {
         console.warn('Container para scroll não encontrado');
-        return;
     }
-
-    const scrollAmount = 300; // Quantidade de scroll
-    if (direction === 'left') {
-        container.scrollLeft -= scrollAmount;
-    } else if (direction === 'right') {
-        container.scrollLeft += scrollAmount;
-    }
-    updateNavArrows(); // Atualiza o estado das setas após o scroll
 }
 
 // Função para atualizar o estado das setas de navegação
