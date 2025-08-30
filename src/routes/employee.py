@@ -742,7 +742,24 @@ def get_status_permissions():
 @employee_required
 def get_status_permissions_alt():
     """Rota alternativa para permissões de status"""
-    return get_status_permissions()
+    from src.models.user import StatusPermission
+
+    permissions = StatusPermission.query.filter_by(user_id=current_user.id).all()
+
+    allowed_statuses = []
+    for permission in permissions:
+        if permission.can_change:
+            allowed_statuses.append({
+                'status': permission.status,
+                'display_name': {
+                    'aprovado': 'Aprovado',
+                    'em_producao': 'Em Produção',
+                    'pronto': 'Pronto',
+                    'entregue': 'Entregue'
+                }.get(permission.status, permission.status.title())
+            })
+
+    return jsonify({'allowed_statuses': allowed_statuses})
 
 @employee_bp.route('/funcionario/ordem-servico/<int:service_order_id>/download-files')
 @login_required

@@ -504,12 +504,18 @@
 let currentOrderId = null;
 
 function openStatusModal(orderId, currentStatus) {
+    console.log('openStatusModal chamada com:', orderId, currentStatus);
     currentOrderId = orderId;
     
     // Buscar permissões de status do funcionário
+    console.log('Fazendo requisição para:', '{{ url_for("employee.get_status_permissions_alt") }}');
     fetch('{{ url_for("employee.get_status_permissions_alt") }}')
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Dados recebidos:', data);
             const statusSelect = document.getElementById('newStatus');
             statusSelect.innerHTML = '';
             
@@ -534,6 +540,7 @@ function openStatusModal(orderId, currentStatus) {
             console.error('Erro ao buscar permissões:', error);
             alert('Erro ao carregar opções de status');
         });
+}
 }
 
 document.getElementById('statusForm').addEventListener('submit', function(e) {
@@ -569,6 +576,7 @@ document.getElementById('statusForm').addEventListener('submit', function(e) {
         console.error('Erro:', error);
         alert('Erro ao alterar status');
     });
+});
 });
 
 // Mostrar/ocultar opções de entrega baseado no status selecionado
