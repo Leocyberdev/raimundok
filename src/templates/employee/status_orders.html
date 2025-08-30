@@ -501,9 +501,11 @@
 
 {% block extra_js %}
 <script>
+// Variáveis globais
 let currentOrderId = null;
 
-function openStatusModal(orderId, currentStatus) {
+// Definir função openStatusModal no escopo global
+window.openStatusModal = function(orderId, currentStatus) {
     console.log('openStatusModal chamada com:', orderId, currentStatus);
     currentOrderId = orderId;
     
@@ -512,12 +514,27 @@ function openStatusModal(orderId, currentStatus) {
     fetch('{{ url_for("employee.get_status_permissions_alt") }}')
         .then(response => {
             console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             return response.json();
         })
         .then(data => {
             console.log('Dados recebidos:', data);
             const statusSelect = document.getElementById('newStatus');
+            
+            if (!statusSelect) {
+                console.error('Elemento newStatus não encontrado');
+                return;
+            }
+            
             statusSelect.innerHTML = '';
+            
+            // Verificar se há permissões
+            if (!data.allowed_statuses || data.allowed_statuses.length === 0) {
+                alert('Você não tem permissão para alterar status');
+                return;
+            }
             
             // Adicionar opções baseadas nas permissões
             data.allowed_statuses.forEach(status => {
@@ -529,31 +546,58 @@ function openStatusModal(orderId, currentStatus) {
                 }
             });
             
+            // Verificar se o modal existe
+            const modalElement = document.getElementById('statusModal');
+            if (!modalElement) {
+                console.error('Modal statusModal não encontrado');
+                return;
+            }
+            
             // Mostrar modal
-            const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+            const modal = new bootstrap.Modal(modalElement);
             modal.show();
 
             // Disparar o evento 'change' para garantir que as opções de entrega sejam exibidas se 'entregue' for o status inicial
-            document.getElementById('newStatus').dispatchEvent(new Event('change'));
+            statusSelect.dispatchEvent(new Event('change'));
         })
         .catch(error => {
             console.error('Erro ao buscar permissões:', error);
-            alert('Erro ao carregar opções de status');
+            alert('Erro ao carregar opções de status: ' + error.message);
         });
-}
+};
 
+// Document ready
 $(document).ready(function() {
+    console.log('Status orders page ready');
+    
+    // Verificar se o modal existe
+    const modalElement = document.getElementById('statusModal');
+    if (!modalElement) {
+        console.error('Modal statusModal não encontrado no DOM');
+    } else {
+        console.log('Modal statusModal encontrado');
+    }
+
     // Handler para o formulário de status
     $('#statusForm').on('submit', function(e) {
         e.preventDefault();
         
-        if (!currentOrderId) return;
+        if (!currentOrderId) {
+            alert('Erro: ID do pedido não encontrado');
+            return;
+        }
+        
+        const statusSelect = document.getElementById('newStatus');
+        if (!statusSelect || !statusSelect.value) {
+            alert('Por favor, selecione um status');
+            return;
+        }
         
         const formData = new FormData();
-        formData.append('status', document.getElementById('newStatus').value);
+        formData.append('status', statusSelect.value);
         
         // Se o status for 'entregue', incluir opções de entrega
-        if (document.getElementById('newStatus').value === 'entregue') {
+        if (statusSelect.value === 'entregue') {
             formData.append('fonte', document.getElementById('fonte').checked);
             formData.append('gabarito', document.getElementById('gabarito').checked);
             formData.append('com_pistao', document.getElementById('com_pistao').checked);
@@ -582,10 +626,12 @@ $(document).ready(function() {
     // Mostrar/ocultar opções de entrega baseado no status selecionado
     $(document).on('change', '#newStatus', function() {
         const deliveryOptions = document.getElementById('deliveryOptions');
-        if (this.value === 'entregue') {
-            deliveryOptions.style.display = 'block';
-        } else {
-            deliveryOptions.style.display = 'none';
+        if (deliveryOptions) {
+            if (this.value === 'entregue') {
+                deliveryOptions.style.display = 'block';
+            } else {
+                deliveryOptions.style.display = 'none';
+            }
         }
     });
 
