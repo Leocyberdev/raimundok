@@ -500,59 +500,45 @@
 
 {% block extra_js %}
 <script>
-// Definir variáveis globais
-window.currentOrderId = null;
-
-// Definir funções de navegação (copiadas do base.html)
-let currentNavPosition = 0;
-const scrollAmount = 300; // pixels to scroll
-
-function scrollNav(direction) {
-    const navItems = document.getElementById('navItems');
-    if (!navItems) {
-        console.warn('navItems not found');
-        return;
-    }
+// Evitar redefinir se já existir
+if (typeof window.statusOrdersInitialized === 'undefined') {
+    window.statusOrdersInitialized = true;
     
-    const container = navItems.parentElement;
-    const maxScroll = navItems.scrollWidth - container.clientWidth;
+    // Definir variáveis globais
+    window.currentOrderId = null;
 
-    currentNavPosition += direction * scrollAmount;
+    // Verificar se scrollNav já existe no base.html, senão definir
+    if (typeof window.scrollNav === 'undefined') {
+        let currentNavPosition = 0;
+        const scrollAmount = 300;
 
-    // Limit scroll position
-    if (currentNavPosition < 0) {
-        currentNavPosition = 0;
-    } else if (currentNavPosition > maxScroll) {
-        currentNavPosition = maxScroll;
+        window.scrollNav = function(direction) {
+            const navItems = document.getElementById('navItems');
+            if (!navItems) {
+                console.warn('navItems not found');
+                return;
+            }
+            
+            const container = navItems.parentElement;
+            const maxScroll = navItems.scrollWidth - container.clientWidth;
+
+            currentNavPosition += direction * scrollAmount;
+
+            if (currentNavPosition < 0) {
+                currentNavPosition = 0;
+            } else if (currentNavPosition > maxScroll) {
+                currentNavPosition = maxScroll;
+            }
+
+            navItems.style.transform = `translateX(-${currentNavPosition}px)`;
+            if (typeof window.updateNavArrows === 'function') {
+                window.updateNavArrows();
+            }
+        };
     }
 
-    navItems.style.transform = `translateX(-${currentNavPosition}px)`;
-    updateNavArrows();
-}
-
-function updateNavArrows() {
-    const navItems = document.getElementById('navItems');
-    if (!navItems) return;
-    
-    const container = navItems.parentElement;
-    const maxScroll = navItems.scrollWidth - container.clientWidth;
-
-    const prevBtn = document.getElementById('navPrev');
-    const nextBtn = document.getElementById('navNext');
-
-    if (prevBtn && nextBtn) {
-        // Show/hide arrows based on scroll position
-        prevBtn.disabled = currentNavPosition <= 0;
-        nextBtn.disabled = currentNavPosition >= maxScroll || maxScroll <= 0;
-    }
-}
-
-// Disponibilizar funções globalmente
-window.scrollNav = scrollNav;
-window.updateNavArrows = updateNavArrows;
-
-// Definir função openStatusModal no escopo global
-function openStatusModal(orderId, currentStatus) {
+    // Definir função openStatusModal no escopo global
+    window.openStatusModal = function(orderId, currentStatus) {
     console.log('openStatusModal chamada com:', orderId, currentStatus);
     window.currentOrderId = orderId;
 
@@ -665,10 +651,8 @@ function openStatusModal(orderId, currentStatus) {
             console.error('Error stack:', error.stack);
             alert('Erro ao carregar opções de status: ' + error.message + '\nVerifique o console para mais detalhes.');
         });
-};
-
-// Garantir que a função esteja disponível globalmente
-window.openStatusModal = openStatusModal;
+    };
+}
 
 // Handler para mudança de status no select
 document.addEventListener('DOMContentLoaded', function() {
