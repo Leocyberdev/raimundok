@@ -504,7 +504,7 @@
 window.currentOrderId = null;
 
 // Definir função openStatusModal no escopo global
-window.openStatusModal = function(orderId, currentStatus) {
+function openStatusModal(orderId, currentStatus) {
     console.log('openStatusModal chamada com:', orderId, currentStatus);
     window.currentOrderId = orderId;
 
@@ -619,6 +619,9 @@ window.openStatusModal = function(orderId, currentStatus) {
         });
 };
 
+// Garantir que a função esteja disponível globalmente
+window.openStatusModal = openStatusModal;
+
 // Handler para mudança de status no select
 document.addEventListener('DOMContentLoaded', function() {
     const statusSelect = document.getElementById('newStatus');
@@ -639,17 +642,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (statusForm) {
         statusForm.addEventListener('submit', function(e) {
             e.preventDefault(); // Impede o submit padrão
-            
+
             if (!window.currentOrderId) {
                 alert('Erro: ID do pedido não encontrado');
                 return;
             }
 
             const formData = new FormData(this);
-            
+
             // URL para alterar status
             const changeStatusUrl = `/funcionario/pedidos/${window.currentOrderId}/alterar-status`;
-            
+
             console.log('Enviando alteração de status para:', changeStatusUrl);
             console.log('Dados do formulário:', Object.fromEntries(formData));
 
@@ -661,16 +664,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 console.log('Resposta da alteração:', data);
-                
+
                 if (data.success) {
                     alert(data.message);
-                    
+
                     // Fechar modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
                     if (modal) {
                         modal.hide();
                     }
-                    
+
                     // Recarregar a página para mostrar as mudanças
                     window.location.reload();
                 } else {
