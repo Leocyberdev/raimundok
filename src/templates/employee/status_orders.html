@@ -618,5 +618,71 @@ window.openStatusModal = function(orderId, currentStatus) {
             alert('Erro ao carregar opções de status: ' + error.message + '\nVerifique o console para mais detalhes.');
         });
 };
+
+// Handler para mudança de status no select
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelect = document.getElementById('newStatus');
+    const deliveryOptions = document.getElementById('deliveryOptions');
+
+    if (statusSelect && deliveryOptions) {
+        statusSelect.addEventListener('change', function() {
+            if (this.value === 'entregue') {
+                deliveryOptions.style.display = 'block';
+            } else {
+                deliveryOptions.style.display = 'none';
+            }
+        });
+    }
+
+    // Handler para o submit do formulário
+    const statusForm = document.getElementById('statusForm');
+    if (statusForm) {
+        statusForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Impede o submit padrão
+            
+            if (!window.currentOrderId) {
+                alert('Erro: ID do pedido não encontrado');
+                return;
+            }
+
+            const formData = new FormData(this);
+            
+            // URL para alterar status
+            const changeStatusUrl = `/funcionario/pedidos/${window.currentOrderId}/alterar-status`;
+            
+            console.log('Enviando alteração de status para:', changeStatusUrl);
+            console.log('Dados do formulário:', Object.fromEntries(formData));
+
+            fetch(changeStatusUrl, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Resposta da alteração:', data);
+                
+                if (data.success) {
+                    alert(data.message);
+                    
+                    // Fechar modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                    
+                    // Recarregar a página para mostrar as mudanças
+                    window.location.reload();
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao alterar status:', error);
+                alert('Erro ao alterar status: ' + error.message);
+            });
+        });
+    }
+});
 </script>
 {% endblock %}
