@@ -505,7 +505,7 @@
 let currentOrderId = null;
 
 // Definir função openStatusModal no escopo global
-window.openStatusModal = function(orderId, currentStatus) {
+function openStatusModal(orderId, currentStatus) {
     console.log('openStatusModal chamada com:', orderId, currentStatus);
     currentOrderId = orderId;
     
@@ -564,7 +564,7 @@ window.openStatusModal = function(orderId, currentStatus) {
             console.error('Erro ao buscar permissões:', error);
             alert('Erro ao carregar opções de status: ' + error.message);
         });
-};
+}
 
 // Document ready
 $(document).ready(function() {
