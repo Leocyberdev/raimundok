@@ -272,55 +272,55 @@ def upload_profile_picture():
     """Upload da foto de perfil do funcionário"""
     from werkzeug.utils import secure_filename
     import os
-    
+
     if 'profile_picture' not in request.files:
         flash('Nenhum arquivo selecionado!', 'error')
         return redirect(url_for('employee.profile'))
-    
+
     file = request.files['profile_picture']
-    
+
     if file.filename == '':
         flash('Nenhum arquivo selecionado!', 'error')
         return redirect(url_for('employee.profile'))
-    
+
     # Verificar se é uma imagem válida
     allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
-    
+
     if file_extension not in allowed_extensions:
         flash('Formato de arquivo inválido! Use PNG, JPG, JPEG, GIF ou WEBP.', 'error')
         return redirect(url_for('employee.profile'))
-    
+
     try:
         from flask import current_app
-        
+
         # Remover foto anterior se existir
         if current_user.profile_picture:
             old_photo_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profiles', current_user.profile_picture)
             if os.path.exists(old_photo_path):
                 os.remove(old_photo_path)
-        
+
         # Criar diretório de perfis se não existir
         profile_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profiles')
         os.makedirs(profile_dir, exist_ok=True)
-        
+
         # Salvar nova foto
         filename = secure_filename(file.filename)
         timestamp = datetime.now(pytz.timezone("America/Sao_Paulo")).strftime("%Y%m%d_%H%M%S_")
         profile_filename = f"{timestamp}profile_{current_user.id}_{filename}"
-        
+
         file_path = os.path.join(profile_dir, profile_filename)
         file.save(file_path)
-        
+
         # Atualizar banco de dados
         current_user.profile_picture = profile_filename
         db.session.commit()
-        
+
         flash('Foto de perfil atualizada com sucesso!', 'success')
-        
+
     except Exception as e:
         flash(f'Erro ao fazer upload da foto: {str(e)}', 'error')
-    
+
     return redirect(url_for('employee.profile'))
 
 
@@ -780,7 +780,7 @@ def download_service_order_files(service_order_id):
 
     # Obter lista de arquivos
     files_list = service_order.get_files_list()
-    
+
     if not files_list:
         flash('Esta ordem de serviço não possui arquivos.', 'error')
         return redirect(url_for('employee.service_order_detail', service_order_id=service_order_id))
@@ -788,26 +788,26 @@ def download_service_order_files(service_order_id):
     try:
         # Criar arquivo ZIP temporário
         temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
-        
+
         with zipfile.ZipFile(temp_zip.name, 'w') as zip_file:
             files_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'service_orders')
-            
+
             for filename in files_list:
                 file_path = os.path.join(files_dir, filename)
                 if os.path.exists(file_path):
                     # Adicionar arquivo ao ZIP com nome limpo
                     zip_file.write(file_path, filename)
-        
+
         # Nome do arquivo ZIP para download
         zip_filename = f"OS_{service_order_id}_{service_order.title.replace(' ', '_')}.zip"
-        
+
         return send_file(
             temp_zip.name,
             as_attachment=True,
             download_name=zip_filename,
             mimetype='application/zip'
         )
-        
+
     except Exception as e:
         flash('Erro ao criar arquivo ZIP.', 'error')
         return redirect(url_for('employee.service_order_detail', service_order_id=service_order_id))
@@ -818,3 +818,70 @@ def download_service_order_files(service_order_id):
         except:
             pass
 
+@employee_bp.route('/funcionario/debug/permissoes')
+@login_required
+@employee_required
+def debug_permissions():
+    """Rota para debug das permissões do usuário"""
+    from src.models.user import StatusPermission
+
+    print(f"=== DEBUG PERMISSÕES ===")
+    print(f"Usuário: {current_user.username} (ID: {current_user.id})")
+    print(f"Tipo: {current_user.user_type}")
+    print(f"Ativo: {current_user.is_active}")
+
+    # Buscar todas as permissões do usuário
+    all_permissions = StatusPermission.query.filter_by(user_id=current_user.id).all()
+    print(f"Total de permissões encontradas: {len(all_permissions)}")
+
+    for perm in all_permissions:
+        print(f"  - Status: {perm.status}, Pode alterar: {perm.can_change}")
+
+    # Verificar se o usuário não tem permissões, criar básicas
+    if not all_permissions:
+        print("Usuário sem permissões! Criando permissões básicas...")
+
+        # Criar permissões básicas para funcionário
+        basic_permissions = [
+            ('aprovado', True),
+            ('em_producao', True),
+            ('pronto', True),
+            ('entregue', False)  # Por padrão, funcionários não podem marcar como entregue
+        ]
+
+        for status, can_change in basic_permissions:
+            permission = StatusPermission(
+                user_id=current_user.id,
+                status=status,
+                can_change=can_change
+            )
+            db.session.add(permission)
+            print(f"  Criada permissão: {status} = {can_change}")
+
+        try:
+            db.session.commit()
+            print("Permissões criadas com sucesso!")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Erro ao criar permissões: {e}")
+
+    # Buscar novamente para confirmar
+    updated_permissions = StatusPermission.query.filter_by(user_id=current_user.id).all()
+
+    result = {
+        'user_id': current_user.id,
+        'username': current_user.username,
+        'user_type': current_user.user_type,
+        'is_active': current_user.is_active,
+        'permissions_count': len(updated_permissions),
+        'permissions': [
+            {
+                'status': p.status,
+                'can_change': p.can_change,
+                'created_at': p.created_at.isoformat() if p.created_at else None
+            }
+            for p in updated_permissions
+        ]
+    }
+
+    return jsonify(result)

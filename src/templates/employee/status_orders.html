@@ -506,52 +506,104 @@ let currentOrderId = null;
 
 // Definir função openStatusModal no escopo global
 function openStatusModal(orderId, currentStatus) {
-    console.log('openStatusModal chamada com:', orderId, currentStatus);
+    console.log('=== openStatusModal INICIADA ===');
+    console.log('Order ID:', orderId);
+    console.log('Current Status:', currentStatus);
+    
     currentOrderId = orderId;
     
     // Buscar permissões de status do funcionário
-    console.log('Fazendo requisição para:', '{{ url_for("employee.get_status_permissions_alt") }}');
-    fetch('{{ url_for("employee.get_status_permissions_alt") }}')
+    const permissionsUrl = '{{ url_for("employee.get_status_permissions_alt") }}';
+    console.log('URL de permissões:', permissionsUrl);
+    
+    // Primeiro, fazer uma requisição de debug
+    const debugUrl = '{{ url_for("employee.debug_permissions") }}';
+    console.log('Fazendo debug das permissões...');
+    
+    fetch(debugUrl)
+        .then(response => response.json())
+        .then(debugData => {
+            console.log('DEBUG - Informações do usuário:', debugData);
+        })
+        .catch(error => {
+            console.warn('Erro no debug (não crítico):', error);
+        });
+    
+    // Agora buscar as permissões
+    console.log('Fazendo requisição para permissões...');
+    fetch(permissionsUrl, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
         .then(response => {
             console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                return response.text().then(text => {
+                    console.error('Response text:', text);
+                    throw new Error(`HTTP error! status: ${response.status}, text: ${text}`);
+                });
             }
             return response.json();
         })
         .then(data => {
-            console.log('Dados recebidos:', data);
+            console.log('=== DADOS RECEBIDOS ===');
+            console.log('Data completa:', JSON.stringify(data, null, 2));
+            
             const statusSelect = document.getElementById('newStatus');
             
             if (!statusSelect) {
-                console.error('Elemento newStatus não encontrado');
+                console.error('Elemento newStatus não encontrado no DOM');
+                console.log('Elementos disponíveis com ID:', document.querySelectorAll('[id]'));
                 return;
             }
             
-            statusSelect.innerHTML = '';
+            console.log('Elemento newStatus encontrado:', statusSelect);
+            statusSelect.innerHTML = '<option value="">Selecione um status...</option>';
             
             // Verificar se há permissões
             if (!data.allowed_statuses || data.allowed_statuses.length === 0) {
-                alert('Você não tem permissão para alterar status');
+                console.warn('Nenhuma permissão encontrada para o usuário');
+                alert('Você não tem permissão para alterar status. Entre em contato com o administrador.');
                 return;
             }
             
+            console.log('Permissões encontradas:', data.allowed_statuses.length);
+            
             // Adicionar opções baseadas nas permissões
+            let optionsAdded = 0;
             data.allowed_statuses.forEach(status => {
+                console.log(`Processando status: ${status.status} (atual: ${currentStatus})`);
                 if (status.status !== currentStatus) {
                     const option = document.createElement('option');
                     option.value = status.status;
                     option.textContent = status.display_name;
                     statusSelect.appendChild(option);
+                    optionsAdded++;
+                    console.log(`Opção adicionada: ${status.display_name}`);
                 }
             });
+            
+            console.log(`Total de opções adicionadas: ${optionsAdded}`);
+            
+            if (optionsAdded === 0) {
+                alert('Não há status disponíveis para alteração a partir do status atual.');
+                return;
+            }
             
             // Verificar se o modal existe
             const modalElement = document.getElementById('statusModal');
             if (!modalElement) {
-                console.error('Modal statusModal não encontrado');
+                console.error('Modal statusModal não encontrado no DOM');
+                console.log('Modais disponíveis:', document.querySelectorAll('.modal'));
                 return;
             }
+            
+            console.log('Modal encontrado, abrindo...');
             
             // Mostrar modal
             const modal = new bootstrap.Modal(modalElement);
@@ -559,10 +611,15 @@ function openStatusModal(orderId, currentStatus) {
 
             // Disparar o evento 'change' para garantir que as opções de entrega sejam exibidas se 'entregue' for o status inicial
             statusSelect.dispatchEvent(new Event('change'));
+            
+            console.log('=== Modal aberto com sucesso ===');
         })
         .catch(error => {
-            console.error('Erro ao buscar permissões:', error);
-            alert('Erro ao carregar opções de status: ' + error.message);
+            console.error('=== ERRO COMPLETO ===');
+            console.error('Error object:', error);
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+            alert('Erro ao carregar opções de status: ' + error.message + '\nVerifique o console para mais detalhes.');
         });
 }
 
