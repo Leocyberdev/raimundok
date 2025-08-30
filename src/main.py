@@ -289,5 +289,4 @@ def format_datetime_br(value, format='%d/%m/%Y às %H:%M'):
         return str(value)
 
 # Registrar o filtro
-app.jinja_env.filters['format_datetime_br'] = format_datetime_br.strftime('%d/%m/%Y às %H:%M')
-    return ''
+app.jinja_env.filters['format_datetime_br'] = format_datetime_br
