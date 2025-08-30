@@ -1,0 +1,490 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Detalhes da Ordem de Serviço{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .service-order-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .service-order-header {
+        background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .service-order-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+    }
+
+    .service-order-subtitle {
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+
+    .info-header {
+        background: #f8fafc;
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .info-title {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-content {
+        padding: 25px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: var(--secondary-color);
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .company-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 10px;
+    }
+
+    .company-logo {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+
+    .company-placeholder {
+        width: 60px;
+        height: 60px;
+        background: var(--primary-color);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+
+    .company-info h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .company-info p {
+        margin: 5px 0 0;
+        color: var(--secondary-color);
+    }
+
+    .files-grid {
+        display: grid;
+        gap: 20px;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .file-icon {
+        font-size: 3rem;
+        color: var(--danger-color);
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .file-info {
+        flex: 1;
+    }
+
+    .file-info h6 {
+        margin: 0 0 8px 0;
+        font-weight: 600;
+        color: var(--dark-color);
+        word-break: break-word;
+    }
+
+    .file-info p {
+        color: var(--secondary-color);
+        margin: 0 0 15px 0;
+        font-size: 0.9rem;
+    }
+
+    .no-files {
+        text-align: center;
+        padding: 40px;
+        color: var(--secondary-color);
+    }
+
+    .no-files i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    .employee-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .employee-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .employee-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .employee-avatar {
+        width: 60px;
+        height: 60px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.5rem;
+        margin: 0 auto 15px;
+    }
+
+    .employee-name {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin: 0 0 5px 0;
+    }
+
+    .employee-role {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .status-badge {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-active {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .status-completed {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .status-cancelled {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+
+    .no-pdf {
+        text-align: center;
+        padding: 40px;
+        color: var(--secondary-color);
+    }
+
+    .no-pdf i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    @media (max-width: 768px) {
+        .company-section {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .employee-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .info-row {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+            gap: 5px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="service-order-container">
+    <!-- Header -->
+    <div class="service-order-header">
+        <h1 class="service-order-title">{{ service_order.title }}</h1>
+        <p class="service-order-subtitle">Ordem de Serviço #{{ service_order.id }}</p>
+
+        <div class="mt-3">
+            <span class="status-badge {% if service_order.status == 'ativa' %}status-active{% elif service_order.status == 'concluida' %}status-completed{% else %}status-cancelled{% endif %}">
+                {% if service_order.status == 'ativa' %}
+                    <i class="fas fa-play-circle"></i>Ativa
+                {% elif service_order.status == 'concluida' %}
+                    <i class="fas fa-check-circle"></i>Concluída
+                {% else %}
+                    <i class="fas fa-times-circle"></i>Cancelada
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Informações do Pedido -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-shopping-cart"></i>
+                Informações do Pedido
+            </h5>
+        </div>
+        <div class="info-content">
+            <div class="company-section">
+                {% if service_order.order.company_logo %}
+                    <img src="{{ url_for('static', filename='uploads/' + service_order.order.company_logo) }}" 
+                         alt="Logo" class="company-logo">
+                {% else %}
+                    <div class="company-placeholder">
+                        {{ service_order.order.company_name[0].upper() }}
+                    </div>
+                {% endif %}
+
+                <div class="company-info">
+                    <h5>{{ service_order.order.company_name }}</h5>
+                    <p>Pedido #{{ service_order.order.id }} • Criado por {{ service_order.order.created_by.username }}</p>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <div class="info-row">
+                    <span class="info-label">Data do Pedido</span>
+                    <span class="info-value">{{ service_order.order.order_date | format_date }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Data de Entrega</span>
+                    <span class="info-value">{{ service_order.order.delivery_date | format_date }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Status do Pedido</span>
+                    <span class="info-value">
+                        {% if service_order.order.status == 'pendente' %}
+                            <span class="badge bg-warning">Pendente</span>
+                        {% elif service_order.order.status == 'aprovado' %}
+                            <span class="badge bg-info">Aprovado</span>
+                        {% elif service_order.order.status == 'em_producao' %}
+                            <span class="badge bg-primary">Em Produção</span>
+                        {% elif service_order.order.status == 'pronto' %}
+                            <span class="badge bg-success">Pronto</span>
+                        {% elif service_order.order.status == 'entregue' %}
+                            <span class="badge bg-secondary">Entregue</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detalhes da Ordem de Serviço -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-clipboard-list"></i>
+                Detalhes da Ordem de Serviço
+            </h5>
+        </div>
+        <div class="info-content">
+            <div class="info-row">
+                <span class="info-label">Criada por</span>
+                <span class="info-value">{{ service_order.created_by.username }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Data de Criação</span>
+                <span class="info-value">{{ service_order.created_at | format_datetime }}</span>
+            </div>
+
+            {% if service_order.description %}
+            <div class="info-row">
+                <span class="info-label">Descrição</span>
+                <span class="info-value">{{ service_order.description }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Arquivos -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-file-pdf"></i>
+                Arquivos ({{ service_order.get_files_list()|length }})
+            </h5>
+        </div>
+        <div class="info-content">
+            {% set files_list = service_order.get_files_list() %}
+            {% if files_list %}
+            <div class="files-grid">
+                {% for filename in files_list %}
+                <div class="file-item">
+                    <div class="file-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="file-info">
+                        <h6>{{ filename }}</h6>
+                        <p>Arquivo disponível para download</p>
+                        <a href="{{ url_for('static', filename='uploads/service_orders/' + filename) }}" 
+                           class="btn btn-danger btn-sm" target="_blank">
+                            <i class="fas fa-download me-2"></i>Baixar
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-files">
+                <i class="fas fa-file-pdf"></i>
+                <h5>Nenhum arquivo</h5>
+                <p>Esta ordem de serviço não possui arquivos anexados.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Funcionários Responsáveis -->
+    <div class="info-card">
+        <div class="info-header">
+            <h5 class="info-title">
+                <i class="fas fa-users"></i>
+                Funcionários Responsáveis ({{ service_order.assigned_employees|length }})
+            </h5>
+        </div>
+        <div class="info-content">
+            {% if service_order.assigned_employees %}
+            <div class="employee-grid">
+                {% for employee in service_order.assigned_employees %}
+                <div class="employee-card">
+                    <div class="employee-avatar">
+                        {{ employee.username[0].upper() }}
+                    </div>
+                    <h6 class="employee-name">{{ employee.username }}</h6>
+                    <p class="employee-role">Funcionário</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5>Nenhum funcionário atribuído</h5>
+                <p class="text-muted">Esta ordem de serviço não possui funcionários responsáveis.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="action-buttons">
+        <a href="{{ url_for('admin.service_orders') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+        </a>
+
+        <a href="{{ url_for('admin.create_service_order', order_id=service_order.order_id) }}" 
+           class="btn btn-warning">
+            <i class="fas fa-edit me-2"></i>Editar
+        </a>
+
+        <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+            <i class="fas fa-trash me-2"></i>Excluir
+        </button>
+    </div>
+
+    <!-- Form para exclusão -->
+    <form id="deleteForm" method="POST" action="{{ url_for('admin.delete_service_order', service_order_id=service_order.id) }}" style="display: none;">
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+function confirmDelete() {
+    if (confirm('Tem certeza que deseja excluir esta ordem de serviço?\n\nEsta ação não pode ser desfeita.')) {
+        document.getElementById('deleteForm').submit();
+    }
+}
+</script>
+{% endblock %}

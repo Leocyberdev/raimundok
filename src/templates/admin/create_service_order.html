@@ -1,0 +1,660 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{{ 'Editar' if existing_service_order else 'Criar' }} Ordem de Serviço{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<!-- Meta tag para melhor suporte em dispositivos móveis -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<style>
+    .create-service-order-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .order-info-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+    
+    .order-info-header {
+        background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+        color: white;
+        padding: 25px;
+        text-align: center;
+    }
+    
+    .company-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 15px;
+    }
+    
+    .company-logo {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+    
+    .company-placeholder {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+    }
+    
+    .form-section {
+        margin-bottom: 30px;
+    }
+    
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f1f5f9;
+    }
+    
+    .section-title h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+    
+    .form-floating {
+        margin-bottom: 20px;
+    }
+    
+    .form-floating .form-control {
+        height: 60px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding-top: 25px;
+    }
+    
+    .form-floating textarea.form-control {
+        height: 120px;
+        padding-top: 25px;
+    }
+    
+    .form-floating .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+    }
+    
+    .form-floating label {
+        color: var(--secondary-color);
+        font-weight: 500;
+    }
+    
+    .file-upload-area {
+        border: 2px dashed #e2e8f0;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .file-upload-area input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    .file-upload-area:hover {
+        border-color: var(--primary-color);
+        background: #f8fafc;
+    }
+    
+    .file-upload-area.dragover {
+        border-color: var(--primary-color);
+        background: #eff6ff;
+    }
+    
+    .file-upload-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+    
+    .file-upload-text {
+        color: var(--secondary-color);
+        margin-bottom: 10px;
+    }
+    
+    .file-upload-hint {
+        font-size: 0.9rem;
+        color: var(--secondary-color);
+    }
+    
+    .employee-selection {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .employee-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .employee-card:hover {
+        border-color: var(--primary-color);
+        background: #f8fafc;
+    }
+    
+    .employee-card.selected {
+        border-color: var(--primary-color);
+        background: #eff6ff;
+    }
+    
+    .employee-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .employee-avatar {
+        width: 40px;
+        height: 40px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .employee-details h6 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+    
+    .employee-details small {
+        color: var(--secondary-color);
+    }
+    
+    .btn-submit {
+        width: 100%;
+        height: 50px;
+        font-weight: 600;
+        margin-top: 20px;
+    }
+    
+    .current-file {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .current-file i {
+        color: var(--danger-color);
+        font-size: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .company-section {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .employee-selection {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-card {
+            padding: 20px;
+        }
+        
+        .file-upload-area {
+            padding: 20px;
+            min-height: 100px;
+        }
+        
+        .file-upload-icon {
+            font-size: 2rem;
+        }
+        
+        .file-upload-text {
+            font-size: 0.9rem;
+        }
+        
+        .file-upload-hint {
+            font-size: 0.8rem;
+        }
+        
+        /* Melhorar experiência de toque em dispositivos móveis */
+        .employee-card {
+            padding: 20px;
+            min-height: 60px;
+        }
+        
+        .employee-card:active {
+            transform: scale(0.98);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="create-service-order-container">
+    <!-- Informações do Pedido -->
+    <div class="order-info-card">
+        <div class="order-info-header">
+            <h3>{{ 'Editar' if existing_service_order else 'Criar' }} Ordem de Serviço</h3>
+            <p>Pedido #{{ order.id }}</p>
+            
+            <div class="company-section">
+                {% if order.company_logo %}
+                    <img src="{{ url_for('static', filename='uploads/' + order.company_logo) }}" 
+                         alt="Logo" class="company-logo">
+                {% else %}
+                    <div class="company-placeholder">
+                        {{ order.company_name[0].upper() }}
+                    </div>
+                {% endif %}
+                
+                <div>
+                    <h4>{{ order.company_name }}</h4>
+                    <p>{{ order.order_date | format_date }} - {{ order.delivery_date | format_date }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Formulário -->
+    <div class="form-card">
+        <form method="POST" enctype="multipart/form-data" id="serviceOrderForm" onsubmit="return validateForm()">
+            <!-- Informações Básicas -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-info-circle text-primary"></i>
+                    <h5>Informações da Ordem de Serviço</h5>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="title" name="title" 
+                           placeholder="Título da ordem de serviço" required
+                           value="{{ existing_service_order.title if existing_service_order else '' }}">
+                    <label for="title">
+                        <i class="fas fa-heading me-2"></i>Título da Ordem de Serviço
+                    </label>
+                </div>
+                
+                <div class="form-floating">
+                    <textarea class="form-control" id="description" name="description" 
+                              placeholder="Descrição detalhada">{{ existing_service_order.description if existing_service_order else '' }}</textarea>
+                    <label for="description">
+                        <i class="fas fa-align-left me-2"></i>Descrição (Opcional)
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Upload de Arquivos -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-file-pdf text-danger"></i>
+                    <h5>Arquivos (máximo 3)</h5>
+                </div>
+                
+                {% if existing_service_order %}
+                    {% set current_files = existing_service_order.get_files_list() %}
+                    {% if current_files %}
+                    <div class="current-files mb-3">
+                        <h6>Arquivos atuais:</h6>
+                        {% for file in current_files %}
+                        <div class="current-file">
+                            <i class="fas fa-file-pdf"></i>
+                            <div>
+                                <strong>{{ file }}</strong>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <small class="text-muted">Selecione novos arquivos para substituir</small>
+                    </div>
+                    {% endif %}
+                {% endif %}
+                
+                <!-- Arquivo 1 -->
+                <div class="file-upload-section mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-file me-2"></i>Arquivo 1
+                    </label>
+                    <div class="file-upload-area" data-file-number="1">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="file-upload-text">
+                            <strong>Clique para selecionar arquivo 1</strong>
+                        </div>
+                        <div class="file-upload-hint">
+                            ou arraste e solte aqui (máximo 10MB)
+                        </div>
+                        <input type="file" id="file1" name="file1" 
+                               accept=".pdf,.cdr,.dxf,.zip,.rar,.xls,.xlsx,.ia,.pptx,application/pdf,application/x-coreldraw,image/vnd.dxf,application/zip,application/x-rar-compressed,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/illustrator,application/vnd.openxmlformats-officedocument.presentationml.presentation">
+                    </div>
+                    <div id="file1-info" class="mt-2" style="display: none;">
+                        <div class="alert alert-info">
+                            <i class="fas fa-file me-2"></i>
+                            <span id="file1-name"></span>
+                            <button type="button" class="btn-close float-end" onclick="clearFile(1)"></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Arquivo 2 -->
+                <div class="file-upload-section mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-file me-2"></i>Arquivo 2 (opcional)
+                    </label>
+                    <div class="file-upload-area" data-file-number="2">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="file-upload-text">
+                            <strong>Clique para selecionar arquivo 2</strong>
+                        </div>
+                        <div class="file-upload-hint">
+                            ou arraste e solte aqui (máximo 10MB)
+                        </div>
+                        <input type="file" id="file2" name="file2" 
+                               accept=".pdf,.cdr,.dxf,.zip,.rar,.xls,.xlsx,.ia,.pptx,application/pdf,application/x-coreldraw,image/vnd.dxf,application/zip,application/x-rar-compressed,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/illustrator,application/vnd.openxmlformats-officedocument.presentationml.presentation">
+                    </div>
+                    <div id="file2-info" class="mt-2" style="display: none;">
+                        <div class="alert alert-info">
+                            <i class="fas fa-file me-2"></i>
+                            <span id="file2-name"></span>
+                            <button type="button" class="btn-close float-end" onclick="clearFile(2)"></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Arquivo 3 -->
+                <div class="file-upload-section mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-file me-2"></i>Arquivo 3 (opcional)
+                    </label>
+                    <div class="file-upload-area" data-file-number="3">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="file-upload-text">
+                            <strong>Clique para selecionar arquivo 3</strong>
+                        </div>
+                        <div class="file-upload-hint">
+                            ou arraste e solte aqui (máximo 10MB)
+                        </div>
+                        <input type="file" id="file3" name="file3" 
+                               accept=".pdf,.cdr,.dxf,.zip,.rar,.xls,.xlsx,.ia,.pptx,application/pdf,application/x-coreldraw,image/vnd.dxf,application/zip,application/x-rar-compressed,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/illustrator,application/vnd.openxmlformats-officedocument.presentationml.presentation">
+                    </div>
+                    <div id="file3-info" class="mt-2" style="display: none;">
+                        <div class="alert alert-info">
+                            <i class="fas fa-file me-2"></i>
+                            <span id="file3-name"></span>
+                            <button type="button" class="btn-close float-end" onclick="clearFile(3)"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Seleção de Funcionários -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-users text-success"></i>
+                    <h5>Funcionários Responsáveis</h5>
+                </div>
+                
+                {% if employees %}
+                <div class="employee-selection">
+                    {% for employee in employees %}
+                    <div class="employee-card" onclick="toggleEmployee({{ employee.id }})">
+                        <div class="employee-info">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="employees" value="{{ employee.id }}" 
+                                       id="emp_{{ employee.id }}"
+                                       {% if existing_service_order and employee in existing_service_order.assigned_employees %}checked{% endif %}>
+                            </div>
+                            <div class="employee-avatar">
+                                {{ employee.username[0].upper() }}
+                            </div>
+                            <div class="employee-details">
+                                <h6>{{ employee.username }}</h6>
+                                <small>Funcionário</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Nenhum funcionário ativo encontrado.
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Botões -->
+            <div class="d-flex gap-3">
+                <a href="{{ url_for('admin.service_orders') }}" class="btn btn-outline-secondary flex-fill">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <button type="submit" class="btn btn-primary flex-fill btn-submit">
+                    <i class="fas fa-save me-2"></i>{{ 'Atualizar' if existing_service_order else 'Criar' }} Ordem de Serviço
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    // Atualizar cards de funcionários selecionados
+    updateEmployeeCards();
+    
+    // Configurar eventos para cada área de upload
+    for (let i = 1; i <= 3; i++) {
+        setupFileUpload(i);
+    }
+});
+
+function setupFileUpload(fileNumber) {
+    const uploadArea = $(`.file-upload-area[data-file-number="${fileNumber}"]`);
+    const fileInput = $(`#file${fileNumber}`);
+
+    uploadArea.on('click', function() {
+        fileInput.click();
+    });
+    
+    uploadArea.on('dragover', function(e) {
+        e.preventDefault();
+        $(this).addClass('dragover');
+    });
+    
+    uploadArea.on('dragleave', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+    });
+    
+    uploadArea.on('drop', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (validateFile(file)) {
+                fileInput[0].files = files;
+                showFileInfo(file, fileNumber);
+            }
+        }
+    });
+    
+    // Mudança no input de arquivo
+    fileInput.on('change', function() {
+        const file = this.files[0];
+        if (file) {
+            if (validateFile(file)) {
+                showFileInfo(file, fileNumber);
+            } else {
+                this.value = '';
+                $(`#file${fileNumber}-info`).hide();
+            }
+        } else {
+            $(`#file${fileNumber}-info`).hide();
+        }
+    });
+}
+
+function validateFile(file) {
+    const validTypes = [
+        'application/pdf',
+        'application/x-coreldraw',
+        'image/vnd.dxf',
+        'application/zip',
+        'application/x-rar-compressed',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/illustrator',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    ];
+    const validExtensions = [
+        '.pdf',
+        '.cdr',
+        '.dxf',
+        '.zip',
+        '.rar',
+        '.xls',
+        '.xlsx',
+        '.ia',
+        '.pptx'
+    ];
+    
+    const fileType = file.type;
+    const fileName = file.name.toLowerCase();
+    const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+    
+    // Validação mais robusta: aceitar se pelo menos uma das validações passar
+    // Isso é especialmente importante para iOS que pode não reportar MIME types corretamente
+    const isValidType = validTypes.includes(fileType);
+    const isValidExtension = validExtensions.includes(fileExtension);
+    
+    if (!isValidType && !isValidExtension) {
+        alert('Por favor, selecione apenas arquivos nos formatos suportados (PDF, CDR, DXF, ZIP, RAR, XLS, XLSX, IA, PPTX).');
+        return false;
+    }
+    
+    // Verificar tamanho do arquivo (10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB em bytes
+    if (file.size > maxSize) {
+        alert('O arquivo deve ter no máximo 10MB.');
+        return false;
+    }
+    
+    // Validação adicional: verificar se o arquivo não está vazio
+    if (file.size === 0) {
+        alert('O arquivo selecionado está vazio.');
+        return false;
+    }
+    
+    return true;
+}
+
+function toggleEmployee(employeeId) {
+    const checkbox = $('#emp_' + employeeId);
+    checkbox.prop('checked', !checkbox.prop('checked'));
+    updateEmployeeCards();
+}
+
+function updateEmployeeCards() {
+    $('.employee-card').each(function() {
+        const checkbox = $(this).find('input[type="checkbox"]');
+        if (checkbox.prop('checked')) {
+            $(this).addClass('selected');
+        } else {
+            $(this).removeClass('selected');
+        }
+    });
+}
+
+function showFileInfo(file, fileNumber) {
+    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+    $(`#file${fileNumber}-name`).text(file.name + ' (' + fileSize + ' MB)');
+    $(`#file${fileNumber}-info`).show();
+}
+
+function clearFile(fileNumber) {
+    $(`#file${fileNumber}`).val('');
+    $(`#file${fileNumber}-info`).hide();
+}
+
+// Validação do formulário
+$('#serviceOrderForm').on('submit', function(e) {
+    const title = $('#title').val().trim();
+    const selectedEmployees = $('input[name="employees"]:checked').length;
+    
+    if (!title) {
+        e.preventDefault();
+        alert('Por favor, insira um título para a ordem de serviço.');
+        $('#title').focus();
+        return false;
+    }
+    
+    if (selectedEmployees === 0) {
+        e.preventDefault();
+        alert('Por favor, selecione pelo menos um funcionário.');
+        return false;
+    }
+    
+    // Mostrar loading
+    const submitBtn = $(this).find('button[type="submit"]');
+    submitBtn.prop('disabled', true);
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Salvando...');
+});
+</script>
+{% endblock %}
+
