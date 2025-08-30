@@ -3,10 +3,13 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from datetime import datetime, date
 import os
-from src.models.user import db, User, Order, OrderObservation, Notification, ServiceOrder
+from src.models.user import db, User, Order, OrderObservation, Notification, ServiceOrder, AuditLog, FileReference # Adicionado AuditLog e FileReference
 from datetime import date
 import pytz
 from src.utils.date_utils import get_delivery_status_text, get_weekday_name_pt
+from sqlalchemy.exc import SQLAlchemyError # Adicionado
+from sqlalchemy import or_ as db_or # Adicionado para db.or_
+import json # Adicionado
 
 
 admin_bp = Blueprint('admin', __name__)
@@ -744,78 +747,304 @@ def service_order_details(service_order_id):
     return render_template('admin/service_order_details.html', 
                          service_order=service_order)
 
+from sqlalchemy.exc import SQLAlchemyError
+import json
+
 @admin_bp.route('/admin/ordem-servico/excluir/<int:service_order_id>', methods=['POST'])
 @login_required
 @admin_required
 def delete_service_order(service_order_id):
-    """Excluir uma ordem de serviço"""
+    """Excluir uma ordem de serviço com validações e logs"""
     try:
         service_order = ServiceOrder.query.get_or_404(service_order_id)
-
-        # Remover todos os arquivos associados
+        
+        # Validações de negócio
+        can_delete, message = can_delete_service_order(service_order)
+        if not can_delete:
+            if request.is_json or request.headers.get('Content-Type') == 'application/json':
+                return jsonify({'success': False, 'message': message}), 400
+            flash(message, 'error')
+            return redirect(url_for('admin.service_orders'))
+        
+        # Salvar dados para log antes da exclusão
+        service_order_data = {
+            'id': service_order.id,
+            'title': service_order.title,
+            'order_id': service_order.order_id,
+            'created_by_id': service_order.created_by_id,
+            'files': service_order.get_files_list()
+        }
+        
+        # Remover arquivos associados com verificação de referências
         files_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'service_orders')
         
-        # Remover file1_filename
-        if service_order.file1_filename:
-            file1_path = os.path.join(files_dir, service_order.file1_filename)
-            if os.path.exists(file1_path):
-                os.remove(file1_path)
-
-        # Remover file2_filename
-        if service_order.file2_filename:
-            file2_path = os.path.join(files_dir, service_order.file2_filename)
-            if os.path.exists(file2_path):
-                os.remove(file2_path)
-
-        # Remover file3_filename
-        if service_order.file3_filename:
-            file3_path = os.path.join(files_dir, service_order.file3_filename)
-            if os.path.exists(file3_path):
-                os.remove(file3_path)
-
-        # Remover arquivo PDF se existir (compatibilidade com versões antigas)
-        if hasattr(service_order, 'pdf_filename') and service_order.pdf_filename:
-            pdf_path = os.path.join(files_dir, service_order.pdf_filename)
-            if os.path.exists(pdf_path):
-                os.remove(pdf_path)
-
-        # Remover notificações relacionadas a esta ordem de serviço
-        Notification.query.filter(
-            Notification.title == 'Nova Ordem de Serviço',
-            Notification.message.like(f'%{service_order.title}%')
-        ).delete(synchronize_session=False)
-
-        # Remover associações na tabela service_order_employees
+        for filename in service_order.get_files_list():
+            if filename:
+                # Verificar se o arquivo é usado por outras ordens de serviço
+                other_orders_using_file = ServiceOrder.query.filter(
+                    ServiceOrder.id != service_order_id,
+                    db_or(
+                        ServiceOrder.file1_filename == filename,
+                        ServiceOrder.file2_filename == filename,
+                        ServiceOrder.file3_filename == filename
+                    )
+                ).count()
+                
+                # Só remover o arquivo se não estiver sendo usado por outras ordens
+                if other_orders_using_file == 0:
+                    file_path = os.path.join(files_dir, filename)
+                    if os.path.exists(file_path):
+                        try:
+                            os.remove(file_path)
+                            current_app.logger.info(f'Arquivo removido: {filename}')
+                        except OSError as e:
+                            current_app.logger.warning(f'Erro ao remover arquivo {filename}: {str(e)}')
+                else:
+                    current_app.logger.info(f'Arquivo {filename} mantido (usado por outras ordens)')
+        
+        # Remover notificações específicas desta ordem de serviço
+        # Buscar notificações dos funcionários atribuídos que mencionam esta ordem
+        assigned_user_ids = [emp.id for emp in service_order.assigned_employees]
+        if assigned_user_ids:
+            notifications_to_remove = Notification.query.filter(
+                Notification.user_id.in_(assigned_user_ids),
+                Notification.title == 'Nova Ordem de Servico',
+                Notification.message.contains(service_order.title)
+            ).all()
+            
+            for notification in notifications_to_remove:
+                db.session.delete(notification)
+                current_app.logger.info(f'Notificação removida: {notification.id}')
+        
+        # Limpar associações na tabela service_order_employees
         service_order.assigned_employees.clear()
-
+        
+        # Log da ação antes da exclusão
+        log_admin_action(
+            action='DELETE_SERVICE_ORDER',
+            table_name='service_order',
+            record_id=service_order_id,
+            old_values=json.dumps(service_order_data, default=str),
+            user_id=current_user.id,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent', '')[:500]  # Limitar tamanho
+        )
+        
         # Excluir a ordem de serviço
         db.session.delete(service_order)
         db.session.commit()
-
-        # Retornar resposta JSON para requisições AJAX
+        
+        current_app.logger.info(f'Ordem de serviço {service_order_id} excluída com sucesso por {current_user.username}')
+        
+        # Resposta para requisições AJAX
         if request.is_json or request.headers.get('Content-Type') == 'application/json':
             return jsonify({
                 'success': True,
                 'message': 'Ordem de serviço excluída com sucesso!'
             })
-
-        # Resposta para requisições normais
+        
         flash('Ordem de serviço excluída com sucesso!', 'success')
         return redirect(url_for('admin.service_orders'))
-
+        
+    except ValueError as e:
+        current_app.logger.warning(f'Validação falhou ao excluir OS {service_order_id}: {str(e)}')
+        if request.is_json or request.headers.get('Content-Type') == 'application/json':
+            return jsonify({'success': False, 'message': str(e)}), 400
+        flash(str(e), 'error')
+        return redirect(url_for('admin.service_orders'))
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f'Erro de banco de dados ao excluir OS {service_order_id}: {str(e)}')
+        
+        if request.is_json or request.headers.get('Content-Type') == 'application/json':
+            return jsonify({'success': False, 'message': 'Erro interno do banco de dados'}), 500
+        flash('Erro interno do banco de dados', 'error')
+        return redirect(url_for('admin.service_orders'))
+        
+    except OSError as e:
+        db.session.rollback()
+        current_app.logger.error(f'Erro de sistema de arquivos ao excluir OS {service_order_id}: {str(e)}')
+        
+        if request.is_json or request.headers.get('Content-Type') == 'application/json':
+            return jsonify({'success': False, 'message': 'Erro ao remover arquivos'}), 500
+        flash('Erro ao remover arquivos do sistema', 'error')
+        return redirect(url_for('admin.service_orders'))
+        
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f'Erro inesperado ao excluir OS {service_order_id}: {str(e)}')
         
-        # Retornar erro JSON para requisições AJAX
+        if request.is_json or request.headers.get('Content-Type') == 'application/json':
+            return jsonify({'success': False, 'message': 'Erro inesperado do sistema'}), 500
+        flash('Erro inesperado do sistema', 'error')
+        return redirect(url_for('admin.service_orders'))
+        
+        # Salvar dados para log antes da exclusão
+        service_order_data = {
+            'id': service_order.id,
+            'title': service_order.title,
+            'order_id': service_order.order_id,
+            'created_by_id': service_order.created_by_id,
+            'files': service_order.get_files_list()
+        }
+        
+        # Remover arquivos associados com verificação de referências
+        files_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'service_orders')
+        
+        for filename in service_order.get_files_list():
+            if filename:
+                # Verificar se o arquivo é usado por outras ordens de serviço
+                other_orders_using_file = ServiceOrder.query.filter(
+                    ServiceOrder.id != service_order_id,
+                    db.or_(
+                        ServiceOrder.file1_filename == filename,
+                        ServiceOrder.file2_filename == filename,
+                        ServiceOrder.file3_filename == filename
+                    )
+                ).count()
+                
+                # Só remover o arquivo se não estiver sendo usado por outras ordens
+                if other_orders_using_file == 0:
+                    file_path = os.path.join(files_dir, filename)
+                    if os.path.exists(file_path):
+                        try:
+                            os.remove(file_path)
+                            current_app.logger.info(f'Arquivo removido: {filename}')
+                        except OSError as e:
+                            current_app.logger.warning(f'Erro ao remover arquivo {filename}: {str(e)}')
+                else:
+                    current_app.logger.info(f'Arquivo {filename} mantido (usado por outras ordens)')
+        
+        # Remover notificações específicas desta ordem de serviço
+        # Buscar notificações dos funcionários atribuídos que mencionam esta ordem
+        assigned_user_ids = [emp.id for emp in service_order.assigned_employees]
+        if assigned_user_ids:
+            notifications_to_remove = Notification.query.filter(
+                Notification.user_id.in_(assigned_user_ids),
+                Notification.title == 'Nova Ordem de Servico',
+                Notification.message.contains(service_order.title)
+            ).all()
+            
+            for notification in notifications_to_remove:
+                db.session.delete(notification)
+                current_app.logger.info(f'Notificação removida: {notification.id}')
+        
+        # Limpar associações na tabela service_order_employees
+        service_order.assigned_employees.clear()
+        
+        # Log da ação antes da exclusão
+        log_admin_action(
+            action='DELETE_SERVICE_ORDER',
+            table_name='service_order',
+            record_id=service_order_id,
+            old_values=json.dumps(service_order_data, default=str),
+            user_id=current_user.id,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent', '')[:500]  # Limitar tamanho
+        )
+        
+        # Excluir a ordem de serviço
+        db.session.delete(service_order)
+        db.session.commit()
+        
+        current_app.logger.info(f'Ordem de serviço {service_order_id} excluída com sucesso por {current_user.username}')
+        
+        # Resposta para requisições AJAX
         if request.is_json or request.headers.get('Content-Type') == 'application/json':
             return jsonify({
-                'success': False,
-                'message': f'Erro ao excluir ordem de serviço: {str(e)}'
-            }), 500
-
-        # Resposta para requisições normais
-        flash(f'Erro ao excluir ordem de serviço: {str(e)}', 'error')
+                'success': True,
+                'message': 'Ordem de serviço excluída com sucesso!'
+            })
+        
+        flash('Ordem de serviço excluída com sucesso!', 'success')
         return redirect(url_for('admin.service_orders'))
+        
+    except ValueError as e:
+        current_app.logger.warning(f'Validação falhou ao excluir OS {service_order_id}: {str(e)}')
+        if request.is_json or request.headers.get('Content-Type') == 'application/json':
+            return jsonify({'success': False, 'message': str(e)}), 400
+        flash(str(e), 'error')
+        return redirect(url_for('admin.service_orders'))
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f'Erro de banco de dados ao excluir OS {service_order_id}: {str(e)}')
+        
+        if request.is_json or request.headers.get('Content-Type') == 'application/json':
+            return jsonify({'success': False, 'message': 'Erro interno do banco de dados'}), 500
+        flash('Erro interno do banco de dados', 'error')
+        return redirect(url_for('admin.service_orders'))
+        
+    except OSError as e:
+        db.session.rollback()
+        current_app.logger.error(f'Erro de sistema de arquivos ao excluir OS {service_order_id}: {str(e)}')
+        
+        if request.is_json or request.headers.get('Content-Type') == 'application/json':
+            return jsonify({'success': False, 'message': 'Erro ao remover arquivos'}), 500
+        flash('Erro ao remover arquivos do sistema', 'error')
+        return redirect(url_for('admin.service_orders'))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Erro inesperado ao excluir OS {service_order_id}: {str(e)}')
+        
+        if request.is_json or request.headers.get('Content-Type') == 'application/json':
+            return jsonify({'success': False, 'message': 'Erro inesperado do sistema'}), 500
+        flash('Erro inesperado do sistema', 'error')
+        return redirect(url_for('admin.service_orders'))
+
+
+def can_delete_service_order(service_order):
+    """Verifica se uma ordem de serviço pode ser excluída"""
+    
+    # Verificar se a ordem está concluída
+    if service_order.status == 'concluida':
+        return False, "Não é possível excluir ordens de serviço concluídas"
+    
+    # Verificar se há funcionários atribuídos ativos
+    if service_order.assigned_employees:
+        active_employees = [emp for emp in service_order.assigned_employees if emp.is_active]
+        if active_employees:
+            employee_names = [emp.username for emp in active_employees]
+            return False, f"Não é possível excluir ordem com funcionários ativos atribuídos: {', '.join(employee_names)}"
+    
+    # Verificar se o pedido principal ainda existe
+    if not service_order.order:
+        return False, "Ordem de serviço órfã detectada - pedido principal não encontrado"
+    
+    # Verificar se o pedido principal não está entregue
+    if service_order.order.status == 'entregue':
+        return False, "Não é possível excluir ordem de serviço de pedido já entregue"
+    
+    return True, "OK"
+
+
+def log_admin_action(action, table_name, record_id, old_values=None, new_values=None, user_id=None, ip_address=None, user_agent=None):
+    """Registra ação administrativa para auditoria"""
+    try:
+        # Verificar se a tabela AuditLog existe, se não, apenas logar
+        if not hasattr(db.Model, 'AuditLog'):
+            current_app.logger.info(f'AUDIT: {action} on {table_name}#{record_id} by user#{user_id}')
+            return
+        
+        audit_log = AuditLog(
+            user_id=user_id or current_user.id,
+            action=action,
+            table_name=table_name,
+            record_id=record_id,
+            old_values=old_values,
+            new_values=new_values,
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+        
+        db.session.add(audit_log)
+        # Não fazer commit aqui, deixar para a função principal
+        
+    except Exception as e:
+        current_app.logger.error(f'Erro ao registrar log de auditoria: {str(e)}')
+        # Não falhar a operação principal por causa do log
 
 
 import pytz

@@ -328,3 +328,189 @@ class DeliveryOption(db.Model):
         return any([self.fonte, self.gabarito, self.com_pistao, self.placa_cristal])
 
 
+
+
+
+class AuditLog(db.Model):
+    """Modelo para logs de auditoria do sistema"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    action = db.Column(db.String(50), nullable=False)  # CREATE, UPDATE, DELETE
+    table_name = db.Column(db.String(50), nullable=False)
+    record_id = db.Column(db.Integer, nullable=False)
+    old_values = db.Column(db.Text)  # JSON com valores anteriores
+    new_values = db.Column(db.Text)  # JSON com novos valores
+    ip_address = db.Column(db.String(45))  # Suporta IPv4 e IPv6
+    user_agent = db.Column(db.Text)
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(pytz.timezone("America/Sao_Paulo"))
+    )
+    
+    # Relacionamentos
+    user = db.relationship("User", backref="audit_logs")
+    
+    def __repr__(self):
+        return f"<AuditLog {self.action} on {self.table_name}#{self.record_id}>"
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user": self.user.username if self.user else None,
+            "action": self.action,
+            "table_name": self.table_name,
+            "record_id": self.record_id,
+            "old_values": self.old_values,
+            "new_values": self.new_values,
+            "ip_address": self.ip_address,
+            "user_agent": self.user_agent,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class FileReference(db.Model):
+    """Modelo para controle de referências de arquivos"""
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(200), nullable=False, unique=True)
+    reference_count = db.Column(db.Integer, default=0)
+    file_size = db.Column(db.Integer)  # Tamanho em bytes
+    file_type = db.Column(db.String(50))  # Tipo MIME
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(pytz.timezone("America/Sao_Paulo"))
+    )
+    last_accessed = db.Column(db.DateTime)
+    
+    def __repr__(self):
+        return f"<FileReference {self.filename} (refs: {self.reference_count})>"
+    
+    def increment_reference(self):
+        """Incrementa contador de referências"""
+        self.reference_count += 1
+        self.last_accessed = datetime.now(pytz.timezone("America/Sao_Paulo"))
+    
+    def decrement_reference(self):
+        """Decrementa contador de referências"""
+        if self.reference_count > 0:
+            self.reference_count -= 1
+        return self.reference_count
+    
+    def is_orphaned(self):
+        """Verifica se o arquivo está órfão (sem referências)"""
+        return self.reference_count <= 0
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "filename": self.filename,
+            "reference_count": self.reference_count,
+            "file_size": self.file_size,
+            "file_type": self.file_type,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "last_accessed": self.last_accessed.isoformat() if self.last_accessed else None
+        }
+
+
+# Melhorias no modelo ServiceOrder existente
+# Adicione estes métodos à classe ServiceOrder existente:
+
+def soft_delete(self, user_id):
+    """Marca a ordem de serviço como excluída (soft delete)"""
+    self.status = "excluida"
+    self.deleted_at = datetime.now(pytz.timezone("America/Sao_Paulo"))
+    self.deleted_by_id = user_id
+
+def is_deletable(self):
+    """Verifica se a ordem de serviço pode ser excluída"""
+    # Não pode excluir se estiver concluída
+    if self.status == "concluida":
+        return False, "Ordem de serviço concluída não pode ser excluída"
+    
+    # Não pode excluir se tiver funcionários ativos atribuídos
+    active_employees = [emp for emp in self.assigned_employees if emp.is_active]
+    if active_employees:
+        return False, f"Ordem possui funcionários ativos: {', '.join([emp.username for emp in active_employees])}"
+    
+    # Não pode excluir se o pedido principal estiver entregue
+    if self.order and self.order.status == "entregue":
+        return False, "Não é possível excluir ordem de pedido já entregue"
+    
+    return True, "OK"
+
+def get_file_references(self):
+    """Retorna lista de referências de arquivos desta ordem"""
+    files = []
+    for filename in self.get_files_list():
+        if filename:
+            ref = FileReference.query.filter_by(filename=filename).first()
+            if ref:
+                files.append(ref)
+    return files
+
+
+# Funções utilitárias para gerenciamento de arquivos
+def create_file_reference(filename, file_path=None):
+    """Cria ou atualiza referência de arquivo"""
+    ref = FileReference.query.filter_by(filename=filename).first()
+    
+    if not ref:
+        # Obter informações do arquivo se o caminho for fornecido
+        file_size = None
+        file_type = None
+        
+        if file_path and os.path.exists(file_path):
+            file_size = os.path.getsize(file_path)
+            import mimetypes
+            file_type, _ = mimetypes.guess_type(file_path)
+        
+        ref = FileReference(
+            filename=filename,
+            reference_count=1,
+            file_size=file_size,
+            file_type=file_type
+        )
+        db.session.add(ref)
+    else:
+        ref.increment_reference()
+    
+    return ref
+
+
+def remove_file_reference(filename):
+    """Remove referência de arquivo e exclui fisicamente se necessário"""
+    ref = FileReference.query.filter_by(filename=filename).first()
+    
+    if ref:
+        remaining_refs = ref.decrement_reference()
+        
+        if remaining_refs <= 0:
+            # Remover arquivo físico
+            from flask import current_app
+            file_path = os.path.join(current_app.config["UPLOAD_FOLDER"], "service_orders", filename)
+            
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    current_app.logger.info(f"Arquivo físico removido: {filename}")
+            except OSError as e:
+                current_app.logger.error(f"Erro ao remover arquivo {filename}: {str(e)}")
+            
+            # Remover registro de referência
+            db.session.delete(ref)
+            return True  # Arquivo foi removido
+    
+    return False  # Arquivo não foi removido
+
+
+def cleanup_orphaned_files():
+    """Remove arquivos órfãos do sistema"""
+    orphaned_refs = FileReference.query.filter(FileReference.reference_count <= 0).all()
+    
+    removed_count = 0
+    for ref in orphaned_refs:
+        if remove_file_reference(ref.filename):
+            removed_count += 1
+    
+    return removed_count
+
+

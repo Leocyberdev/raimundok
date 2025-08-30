@@ -194,6 +194,17 @@ with app.app_context():
 
         db.create_all()
 
+        # Criar tabelas para AuditLog e FileReference se não existirem
+        if 'audit_log' not in inspector.get_table_names():
+            print("Criando tabela audit_log...")
+            AuditLog.__table__.create(db.engine)
+            print("Tabela audit_log criada com sucesso!")
+        
+        if 'file_reference' not in inspector.get_table_names():
+            print("Criando tabela file_reference...")
+            FileReference.__table__.create(db.engine)
+            print("Tabela file_reference criada com sucesso!")
+
         # Criar usuários admin padrão se não existirem
         try:
             if not User.query.filter_by(username='Nonato').first():
