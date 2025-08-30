@@ -215,6 +215,65 @@
         border-color: var(--primary-color);
     }
 
+    .nav-scroll-buttons {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+        gap: 10px;
+    }
+
+    .nav-scroll-buttons button {
+        background-color: #e2e8f0;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .nav-scroll-buttons button:hover {
+        background-color: #cbd5e1;
+    }
+
+    .table-responsive {
+        position: relative;
+    }
+
+    .table-nav-left, .table-nav-right {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: rgba(255, 255, 255, 0.8);
+        border: 1px solid #ccc;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        font-size: 1.2rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .table-nav-left {
+        left: 10px;
+    }
+
+    .table-nav-right {
+        right: 10px;
+    }
+
+    .table-nav-left.disabled, .table-nav-right.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
     @media (max-width: 768px) {
         .order-header {
             flex-direction: column;
@@ -503,7 +562,7 @@
 // Evitar redefinir se já existir
 if (typeof window.statusOrdersInitialized === 'undefined') {
     window.statusOrdersInitialized = true;
-    
+
     // Definir variáveis globais
     window.currentOrderId = null;
 
@@ -518,7 +577,7 @@ if (typeof window.statusOrdersInitialized === 'undefined') {
                 console.warn('navItems not found');
                 return;
             }
-            
+
             const container = navItems.parentElement;
             const maxScroll = navItems.scrollWidth - container.clientWidth;
 
@@ -654,11 +713,50 @@ if (typeof window.statusOrdersInitialized === 'undefined') {
     };
 }
 
+// Função para navegação com setas
+function scrollNav(direction) {
+    const container = document.querySelector('.table-responsive'); // Busca o container correto
+    if (!container) {
+        console.warn('Container para scroll não encontrado');
+        return;
+    }
+
+    const scrollAmount = 300; // Quantidade de scroll
+    if (direction === 'left') {
+        container.scrollLeft -= scrollAmount;
+    } else if (direction === 'right') {
+        container.scrollLeft += scrollAmount;
+    }
+    updateNavArrows(); // Atualiza o estado das setas após o scroll
+}
+
+// Função para atualizar o estado das setas de navegação
+function updateNavArrows() {
+    const container = document.querySelector('.table-responsive');
+    if (!container) return;
+
+    const isLeftDisabled = container.scrollLeft === 0;
+    const isRightDisabled = container.scrollLeft + container.clientWidth >= container.scrollWidth;
+
+    const leftArrow = document.querySelector('.table-nav-left');
+    const rightArrow = document.querySelector('.table-nav-right');
+
+    if (leftArrow) {
+        leftArrow.classList.toggle('disabled', isLeftDisabled);
+        leftArrow.style.cursor = isLeftDisabled ? 'not-allowed' : 'pointer';
+    }
+    if (rightArrow) {
+        rightArrow.classList.toggle('disabled', isRightDisabled);
+        rightArrow.style.cursor = isRightDisabled ? 'not-allowed' : 'pointer';
+    }
+}
+
+
 // Handler para mudança de status no select
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar navegação
     updateNavArrows();
-    
+
     const statusSelect = document.getElementById('newStatus');
     const deliveryOptions = document.getElementById('deliveryOptions');
 

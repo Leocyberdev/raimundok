@@ -442,6 +442,19 @@
 <script>
 let currentOrderId = null;
 
+// Função para navegação com setas
+function scrollNav(direction) {
+    const container = document.querySelector('.table-responsive');
+    if (!container) return;
+    
+    const scrollAmount = 300;
+    if (direction === 'left') {
+        container.scrollLeft -= scrollAmount;
+    } else if (direction === 'right') {
+        container.scrollLeft += scrollAmount;
+    }
+}
+
 function filterOrders() {
     const status = document.getElementById('statusFilter').value;
     const url = new URL(window.location);
