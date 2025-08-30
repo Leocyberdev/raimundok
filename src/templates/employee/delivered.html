@@ -490,7 +490,7 @@
                             <i class="fas fa-calendar-plus"></i>
                             Data do Pedido
                         </div>
-                        <div class="info-value">{{ order.order_date | format_date }}</div>
+                        <div class="info-value">{{ order.order_date.strftime('%d/%m/%Y') }}</div>
                     </div>
 
                     <div class="info-item">
@@ -498,7 +498,7 @@
                             <i class="fas fa-calendar-check"></i>
                             Data Prevista
                         </div>
-                        <div class="info-value">{{ order.delivery_date | format_date }}</div>
+                        <div class="info-value">{{ order.delivery_date.strftime('%d/%m/%Y') }}</div>
                     </div>
 
                     <div class="info-item">

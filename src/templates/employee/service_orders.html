@@ -282,7 +282,10 @@
             <div class="service-order-details">
                 <div class="detail-item">
                     <div class="detail-label">Data de Criação</div>
-                    <div class="detail-value">{{ service_order.created_at | format_datetime }}</div>
+                    <div class="detail-value">
+                        {% set service_br = service_order.created_at.astimezone(timezone('America/Sao_Paulo')) if service_order.created_at.tzinfo else timezone('America/Sao_Paulo').localize(service_order.created_at) %}
+                        <span>Criado em {{ service_br.strftime('%d/%m/%Y às %H:%M') }}</span>
+                    </div>
                 </div>
 
                 <div class="detail-item">

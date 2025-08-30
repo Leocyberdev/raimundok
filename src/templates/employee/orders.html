@@ -310,13 +310,13 @@
             <div class="order-details">
                 <div class="detail-item">
                     <div class="detail-label">Data do Pedido</div>
-                    <div class="detail-value">{{ order.order_date | format_datetime ('%d/%m/%Y') }}</div>
+                    <div class="detail-value">{{ order.order_date.strftime('%d/%m/%Y') }}</div>
                 </div>
 
                 <div class="detail-item">
                     <div class="detail-label">Data de Entrega</div>
                     <div class="detail-value">
-                        {{ order.delivery_date | format_datetime ('%d/%m/%Y') }}
+                        {{ order.delivery_date.strftime('%d/%m/%Y') }}
                         <br>
                         {% if days_left < 0 %}
                             <small class="text-danger">{{ -days_left }} dias atrasado</small>

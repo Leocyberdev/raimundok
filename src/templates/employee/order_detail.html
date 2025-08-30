@@ -329,7 +329,8 @@
                     </div>
                     <div class="meta-item">
                         <i class="fas fa-calendar"></i>
-                        <span>{{ order.created_at | format_datetime_br }}</span>
+                        {% set created_br = order.created_at.astimezone(timezone('America/Sao_Paulo')) if order.created_at.tzinfo else timezone('America/Sao_Paulo').localize(order.created_at) %}
+                        <span>{{ created_br.strftime('%d/%m/%Y às %H:%M') }}</span>
                     </div>
                 </div>
             </div>
@@ -478,7 +479,8 @@
                                                     </p>
                                                 </div>
                                                 <small class="text-muted">
-                                                    {{ history.created_at | format_datetime_br }}
+                                                    {% set history_br = history.created_at.astimezone(timezone('America/Sao_Paulo')) if history.created_at.tzinfo else timezone('America/Sao_Paulo').localize(history.created_at) %}
+                                                    {{ history_br.strftime('%d/%m/%Y %H:%M') }}
                                                 </small>
                                             </div>
                                         </div>
@@ -608,7 +610,8 @@
                             </div>
                         </div>
                         <div class="observation-date">
-                            {{ observation.created_at | format_datetime_br }}
+                            {% set obs_br = observation.created_at.astimezone(timezone('America/Sao_Paulo')) if observation.created_at.tzinfo else timezone('America/Sao_Paulo').localize(observation.created_at) %}
+                            {{ obs_br.strftime('%d/%m/%Y às %H:%M') }}
                         </div>
                     </div>
                     <div class="observation-content">
