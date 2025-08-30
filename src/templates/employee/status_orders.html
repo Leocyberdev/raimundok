@@ -541,56 +541,55 @@ function openStatusModal(orderId, currentStatus) {
             alert('Erro ao carregar opções de status');
         });
 }
-}
 
-document.getElementById('statusForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    if (!currentOrderId) return;
-    
-    const formData = new FormData();
-    formData.append('status', document.getElementById('newStatus').value);
-    
-    // Se o status for 'entregue', incluir opções de entrega
-    if (document.getElementById('newStatus').value === 'entregue') {
-        formData.append('fonte', document.getElementById('fonte').checked);
-        formData.append('gabarito', document.getElementById('gabarito').checked);
-        formData.append('com_pistao', document.getElementById('com_pistao').checked);
-        formData.append('placa_cristal', document.getElementById('placa_cristal').checked);
-    }
-    
-    fetch(`{{ url_for("employee.change_order_status", order_id=0) }}`.replace('0', currentOrderId), {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        alert('Erro ao alterar status');
-    });
-});
-});
-
-// Mostrar/ocultar opções de entrega baseado no status selecionado
-document.getElementById('newStatus').addEventListener('change', function() {
-    const deliveryOptions = document.getElementById('deliveryOptions');
-    if (this.value === 'entregue') {
-        deliveryOptions.style.display = 'block';
-    } else {
-        deliveryOptions.style.display = 'none';
-    }
-});
-
-// Confirmar mudanças de status
 $(document).ready(function() {
+    // Handler para o formulário de status
+    $('#statusForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        if (!currentOrderId) return;
+        
+        const formData = new FormData();
+        formData.append('status', document.getElementById('newStatus').value);
+        
+        // Se o status for 'entregue', incluir opções de entrega
+        if (document.getElementById('newStatus').value === 'entregue') {
+            formData.append('fonte', document.getElementById('fonte').checked);
+            formData.append('gabarito', document.getElementById('gabarito').checked);
+            formData.append('com_pistao', document.getElementById('com_pistao').checked);
+            formData.append('placa_cristal', document.getElementById('placa_cristal').checked);
+        }
+        
+        fetch(`{{ url_for("employee.change_order_status", order_id=0) }}`.replace('0', currentOrderId), {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao alterar status');
+        });
+    });
+
+    // Mostrar/ocultar opções de entrega baseado no status selecionado
+    $(document).on('change', '#newStatus', function() {
+        const deliveryOptions = document.getElementById('deliveryOptions');
+        if (this.value === 'entregue') {
+            deliveryOptions.style.display = 'block';
+        } else {
+            deliveryOptions.style.display = 'none';
+        }
+    });
+
+    // Confirmar mudanças de status
     $('form[action*="update_status"]').on('submit', function(e) {
         const status = $(this).find('input[name="new_status"]').val();
         let message = '';
@@ -612,5 +611,6 @@ $(document).ready(function() {
         }
     });
 });
+</script>
 {% endblock %}
 
