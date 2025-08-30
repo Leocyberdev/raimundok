@@ -508,8 +508,9 @@
                         </div>
                         <div class="info-value">
                             {% if order.delivered_at %}
-                                {{ order.delivered_at | format_datetime("%d/%m/%Y") }}<br>
-                                <small class="text-muted">{{ order.delivered_at | format_datetime("%H:%M") }}</small>
+                                {% set br_tz = order.delivered_at.astimezone(timezone('America/Sao_Paulo')) if order.delivered_at.tzinfo else timezone('America/Sao_Paulo').localize(order.delivered_at) %}
+                                {{ br_tz.strftime("%d/%m/%Y") }}<br>
+                                <small class="text-muted">{{ br_tz.strftime("%H:%M") }}</small>
                             {% else %}
                                 N/A
                             {% endif %}
@@ -552,7 +553,8 @@
                             <div class="timeline-icon">
                                 <i class="fas fa-plus"></i>
                             </div>
-                            <span>Pedido criado em {{ order.created_at | format_datetime }}</span>
+                            {% set created_br = order.created_at.astimezone(timezone('America/Sao_Paulo')) if order.created_at.tzinfo else timezone('America/Sao_Paulo').localize(order.created_at) %}
+                            <span>Pedido criado em {{ created_br.strftime("%d/%m/%Y às %H:%M") }}</span>
                         </div>
                         {% for history in order.status_history %}
                                     <div class="timeline-item">
@@ -577,7 +579,8 @@
                                                 {% endif %}
                                             </h6>
                                             <p>por {{ history.user.username }}</p>
-                                            <small class="text-muted">{{ history.created_at | format_datetime }}</small>
+                                            {% set history_br = history.created_at.astimezone(timezone('America/Sao_Paulo')) if history.created_at.tzinfo else timezone('America/Sao_Paulo').localize(history.created_at) %}
+                                            <small class="text-muted">{{ history_br.strftime("%d/%m/%Y às %H:%M") }}</small>
                                         </div>
                                     </div>
                                 {% endfor %}

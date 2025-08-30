@@ -100,7 +100,8 @@ def inject_date():
     return {
         'date': date,
         'now': datetime.now(),
-        'timedelta': timedelta
+        'timedelta': timedelta,
+        'timezone': pytz.timezone
     }
 
 
