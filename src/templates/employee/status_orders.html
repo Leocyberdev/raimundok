@@ -503,6 +503,54 @@
 // Definir variáveis globais
 window.currentOrderId = null;
 
+// Definir funções de navegação (copiadas do base.html)
+let currentNavPosition = 0;
+const scrollAmount = 300; // pixels to scroll
+
+function scrollNav(direction) {
+    const navItems = document.getElementById('navItems');
+    if (!navItems) {
+        console.warn('navItems not found');
+        return;
+    }
+    
+    const container = navItems.parentElement;
+    const maxScroll = navItems.scrollWidth - container.clientWidth;
+
+    currentNavPosition += direction * scrollAmount;
+
+    // Limit scroll position
+    if (currentNavPosition < 0) {
+        currentNavPosition = 0;
+    } else if (currentNavPosition > maxScroll) {
+        currentNavPosition = maxScroll;
+    }
+
+    navItems.style.transform = `translateX(-${currentNavPosition}px)`;
+    updateNavArrows();
+}
+
+function updateNavArrows() {
+    const navItems = document.getElementById('navItems');
+    if (!navItems) return;
+    
+    const container = navItems.parentElement;
+    const maxScroll = navItems.scrollWidth - container.clientWidth;
+
+    const prevBtn = document.getElementById('navPrev');
+    const nextBtn = document.getElementById('navNext');
+
+    if (prevBtn && nextBtn) {
+        // Show/hide arrows based on scroll position
+        prevBtn.disabled = currentNavPosition <= 0;
+        nextBtn.disabled = currentNavPosition >= maxScroll || maxScroll <= 0;
+    }
+}
+
+// Disponibilizar funções globalmente
+window.scrollNav = scrollNav;
+window.updateNavArrows = updateNavArrows;
+
 // Definir função openStatusModal no escopo global
 function openStatusModal(orderId, currentStatus) {
     console.log('openStatusModal chamada com:', orderId, currentStatus);
@@ -624,6 +672,9 @@ window.openStatusModal = openStatusModal;
 
 // Handler para mudança de status no select
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar navegação
+    updateNavArrows();
+    
     const statusSelect = document.getElementById('newStatus');
     const deliveryOptions = document.getElementById('deliveryOptions');
 
