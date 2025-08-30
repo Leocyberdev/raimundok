@@ -457,8 +457,21 @@ function filterOrders() {
 }
 
 function openDeliveryModal(orderId, companyName) {
+    console.log('openDeliveryModal chamada com:', orderId, companyName);
+    
     currentOrderId = orderId;
-    document.getElementById('modalCompanyName').textContent = companyName;
+    
+    // Verificar se os elementos existem
+    const modalCompanyName = document.getElementById('modalCompanyName');
+    const deliveryValidationMessage = document.getElementById('deliveryValidationMessage');
+    const deliveryModal = document.getElementById('deliveryModal');
+    
+    if (!modalCompanyName || !deliveryValidationMessage || !deliveryModal) {
+        console.error('Elementos do modal não encontrados');
+        return;
+    }
+    
+    modalCompanyName.textContent = companyName;
     
     // Limpar seleções anteriores
     document.querySelectorAll('.delivery-option').forEach(checkbox => {
@@ -466,39 +479,25 @@ function openDeliveryModal(orderId, companyName) {
     });
     
     // Esconder mensagem de validação
-    document.getElementById('deliveryValidationMessage').classList.add('d-none');
+    deliveryValidationMessage.classList.add('d-none');
     
     // Abrir modal
-    const modal = new bootstrap.Modal(document.getElementById('deliveryModal'));
+    const modal = new bootstrap.Modal(deliveryModal);
     modal.show();
+    
+    console.log('Modal de entrega aberto com sucesso');
 }
 
-// Validação das opções de entrega
-function validateDeliveryOptions() {
+// Confirmar entrega
+document.getElementById('confirmDelivery').addEventListener('click', function() {
+    // Validar se pelo menos uma opção foi selecionada
     const hasSelectedOption = document.querySelectorAll('.delivery-option:checked').length > 0;
     
     if (!hasSelectedOption) {
         document.getElementById('deliveryValidationMessage').classList.remove('d-none');
-        return false;
+        return;
     } else {
         document.getElementById('deliveryValidationMessage').classList.add('d-none');
-        return true;
-    }
-}
-
-// Esconder mensagem de validação quando uma opção for selecionada
-document.querySelectorAll('.delivery-option').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        if (document.querySelectorAll('.delivery-option:checked').length > 0) {
-            document.getElementById('deliveryValidationMessage').classList.add('d-none');
-        }
-    });
-});
-
-// Confirmar entrega
-document.getElementById('confirmDelivery').addEventListener('click', function() {
-    if (!validateDeliveryOptions()) {
-        return;
     }
     
     const confirmBtn = this;
@@ -550,6 +549,21 @@ document.getElementById('confirmDelivery').addEventListener('click', function() 
         // Restaurar botão
         confirmBtn.disabled = false;
         confirmBtn.innerHTML = originalText;
+    });
+});
+
+// Adicionar event listeners para as opções de entrega
+document.addEventListener('DOMContentLoaded', function() {
+    // Esconder mensagem de validação quando uma opção for selecionada
+    document.querySelectorAll('.delivery-option').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (document.querySelectorAll('.delivery-option:checked').length > 0) {
+                const validationMsg = document.getElementById('deliveryValidationMessage');
+                if (validationMsg) {
+                    validationMsg.classList.add('d-none');
+                }
+            }
+        });
     });
 });
 
