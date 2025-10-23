@@ -1,0 +1,525 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Funcionários{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .employees-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .employee-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .employee-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .employee-card.inactive {
+        border-left-color: var(--secondary-color);
+        opacity: 0.7;
+    }
+    
+    .employee-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    
+    .employee-details {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex: 1;
+    }
+    
+    .employee-avatar {
+        width: 60px;
+        height: 60px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+        overflow: hidden;
+    }
+    
+    .employee-profile-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .employee-avatar.inactive {
+        background: var(--secondary-color);
+    }
+    
+    .employee-data h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+    
+    .employee-meta {
+        display: flex;
+        gap: 20px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .employee-meta span {
+        font-size: 0.9rem;
+        color: var(--secondary-color);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .employee-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    .status-inactive {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+    
+    .btn-action {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-action:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .btn-action:disabled:hover {
+        transform: none;
+    }
+    
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-item {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        border-top: 4px solid var(--primary-color);
+    }
+    
+    .stat-item.success {
+        border-top-color: var(--success-color);
+    }
+    
+    .stat-item.warning {
+        border-top-color: var(--warning-color);
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin: 0;
+    }
+    
+    .stat-label {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 5px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--secondary-color);
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    @media (max-width: 768px) {
+        .employees-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .employee-info {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+        
+        .employee-details {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .employee-meta {
+            justify-content: center;
+        }
+        
+        .employee-actions {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="employees-header">
+    <div>
+        <h2 class="mb-0">
+            <i class="fas fa-users text-primary me-2"></i>
+            Gerenciar Usuários
+        </h2>
+        <p class="text-muted mb-0">Gerencie contas, permissões e níveis de acesso dos usuários</p>
+    </div>
+    
+    <a href="{{ url_for('admin.add_employee') }}" class="btn btn-primary">
+        <i class="fas fa-user-plus me-2"></i>Novo Funcionário
+    </a>
+</div>
+
+<!-- Estatísticas -->
+<div class="stats-row">
+    <div class="stat-item">
+        <h3 class="stat-value">{{ employees | length }}</h3>
+        <div class="stat-label">Total de Usuários</div>
+    </div>
+    <div class="stat-item success">
+        <h3 class="stat-value">{{ employees | selectattr('is_active') | list | length }}</h3>
+        <div class="stat-label">Usuários Ativos</div>
+    </div>
+    <div class="stat-item warning">
+        <h3 class="stat-value">{{ employees | rejectattr('is_active') | list | length }}</h3>
+        <div class="stat-label">Usuários Inativos</div>
+    </div>
+    <div class="stat-item">
+        <h3 class="stat-value">{{ employees | selectattr('user_type', 'equalto', 'admin') | list | length }}</h3>
+        <div class="stat-label">Administradores</div>
+    </div>
+</div>
+
+<!-- Lista de Funcionários -->
+{% if employees %}
+    {% for employee in employees %}
+    <div class="employee-card {% if not employee.is_active %}inactive{% endif %}">
+        <div class="employee-info">
+            <div class="employee-details">
+                <div class="employee-avatar {% if not employee.is_active %}inactive{% endif %}">
+                    {% if employee.profile_picture %}
+                        <img src="{{ url_for('admin.serve_profile_picture', filename=employee.profile_picture) }}" 
+                             alt="Foto de {{ employee.username }}" class="employee-profile-image">
+                    {% else %}
+                        {{ employee.username[0].upper() }}
+                    {% endif %}
+                </div>
+                
+                <div class="employee-data">
+                    <h5>{{ employee.username }}</h5>
+                    <div class="employee-meta">
+                        <span>
+                            <i class="fas fa-calendar-plus"></i>
+                            Criado em {{ employee.created_at.strftime('%d/%m/%Y') }}
+                        </span>
+                        <span>
+                            <i class="fas fa-user-tag"></i>
+                            {% if employee.user_type == 'admin' %}
+                                Administrador
+                            {% else %}
+                                Funcionário
+                            {% endif %}
+                        </span>
+                        <span>
+                            {% if employee.is_active %}
+                                <i class="fas fa-check-circle text-success"></i>
+                                Conta Ativa
+                            {% else %}
+                                <i class="fas fa-times-circle text-danger"></i>
+                                Conta Inativa
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="employee-actions">
+                <span class="status-badge {% if employee.is_active %}status-active{% else %}status-inactive{% endif %}">
+                    {% if employee.is_active %}
+                        <i class="fas fa-check me-1"></i>Ativo
+                    {% else %}
+                        <i class="fas fa-times me-1"></i>Inativo
+                    {% endif %}
+                </span>
+                
+                <form method="POST" action="{{ url_for('admin.toggle_employee', employee_id=employee.id) }}" 
+                      class="d-inline" onsubmit="return confirmToggle('{{ employee.username }}', {{ employee.is_active | lower }})">
+                    {% if employee.is_active %}
+                        <button type="submit" class="btn btn-warning btn-action" title="Desativar Funcionário">
+                            <i class="fas fa-user-slash"></i>
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-success btn-action" title="Ativar Funcionário">
+                            <i class="fas fa-user-check"></i>
+                        </button>
+                    {% endif %}
+                </form>
+                
+                {% if employee.user_type == 'funcionario' %}
+                    <button type="button" class="btn btn-warning btn-action" title="Promover a Admin"
+                            onclick="promoteToAdmin('{{ employee.username }}', {{ employee.id }})"
+                            {% if not employee.is_active %}disabled{% endif %}>
+                        <i class="fas fa-crown"></i>
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-secondary btn-action" title="Rebaixar a Funcionário"
+                            onclick="demoteToEmployee('{{ employee.username }}', {{ employee.id }})"
+                            {% if not employee.is_active %}disabled{% endif %}>
+                        <i class="fas fa-user-minus"></i>
+                    </button>
+                {% endif %}
+                
+                <a href="{{ url_for('admin.employee_details', employee_id=employee.id) }}" class="btn btn-info btn-action" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                </a>
+                
+                <form method="POST" action="{{ url_for('admin.delete_employee', employee_id=employee.id) }}" 
+                      class="d-inline" onsubmit="return confirmDelete('{{ employee.username }}')">
+                    <button type="submit" class="btn btn-danger btn-action" title="Excluir Funcionário">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <h4>Nenhum funcionário cadastrado</h4>
+        <p>Ainda não há funcionários cadastrados no sistema.</p>
+        <a href="{{ url_for('admin.add_employee') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i>Cadastrar Primeiro Funcionário
+        </a>
+    </div>
+{% endif %}
+
+<!-- Informações Adicionais -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informações
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Usuários ativos podem acessar o painel
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-times text-danger me-2"></i>
+                        Usuários inativos não conseguem fazer login
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-bell text-info me-2"></i>
+                        Funcionários recebem notificações de novos pedidos
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-crown text-warning me-2"></i>
+                        Funcionários podem ser promovidos a administradores
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-user-minus text-info me-2"></i>
+                        Administradores podem ser rebaixados a funcionários
+                    </li>
+                    <li>
+                        <i class="fas fa-shield-alt text-warning me-2"></i>
+                        Apenas administradores podem gerenciar usuários
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>Ações Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin.add_employee') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Novo Funcionário
+                    </a>
+                    <button type="button" class="btn btn-outline-info" onclick="exportEmployees()">
+                        <i class="fas fa-download me-2"></i>Exportar Lista
+                    </button>
+                    <a href="{{ url_for('admin.settings') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-cog me-2"></i>Configurações
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+function confirmToggle(username, isActive) {
+    const action = isActive ? 'desativar' : 'ativar';
+    const message = `Tem certeza que deseja ${action} o funcionário "${username}"?`;
+    return confirm(message);
+}
+
+function promoteToAdmin(username, employeeId) {
+    const confirmed = confirm(
+        `ATENÇÃO: Tem certeza que deseja PROMOVER o funcionário "${username}" a ADMINISTRADOR?\n\n` +
+        `Como administrador, este usuário terá ACESSO TOTAL ao sistema, incluindo:\n` +
+        `• Gerenciar todos os pedidos\n` +
+        `• Adicionar e remover funcionários\n` +
+        `• Alterar configurações do sistema\n` +
+        `• Acessar dados sensíveis\n\n` +
+        `Você poderá rebaixá-lo de volta para funcionário se necessário. Deseja continuar?`
+    );
+    
+    if (confirmed) {
+        // Criar formulário para envio
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/funcionarios/${employeeId}/promover-admin`;
+        
+        // Adicionar token de confirmação
+        const confirmInput = document.createElement('input');
+        confirmInput.type = 'hidden';
+        confirmInput.name = 'confirm';
+        confirmInput.value = 'true';
+        form.appendChild(confirmInput);
+        
+        // Enviar formulário
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function demoteToEmployee(username, adminId) {
+    const confirmed = confirm(
+        `ATENÇÃO: Tem certeza que deseja REBAIXAR o administrador "${username}" para FUNCIONÁRIO?\n\n` +
+        `Esta ação irá:\n` +
+        `• Remover acesso administrativo total\n` +
+        `• Limitar permissões apenas para funcionário\n` +
+        `• Manter o usuário ativo no sistema\n\n` +
+        `O usuário continuará podendo acessar o painel de funcionário. Deseja continuar?`
+    );
+    
+    if (confirmed) {
+        // Criar formulário para envio
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/funcionarios/${adminId}/rebaixar-funcionario`;
+        
+        // Adicionar token de confirmação
+        const confirmInput = document.createElement('input');
+        confirmInput.type = 'hidden';
+        confirmInput.name = 'confirm';
+        confirmInput.value = 'true';
+        form.appendChild(confirmInput);
+        
+        // Enviar formulário
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function viewEmployee(username) {
+    // Implementar modal ou página de detalhes
+    alert(`Visualizando detalhes do funcionário: ${username}`);
+}
+
+function confirmDelete(username) {
+    return confirm(`Tem certeza que deseja EXCLUIR o funcionário "${username}" e TODAS as notificações relacionadas a ele? Esta ação é irreversível.`);
+}
+
+function exportEmployees() {
+    // Implementar exportação
+    alert('Funcionalidade de exportação será implementada em breve!');
+}
+
+$(document).ready(function() {
+    // Auto-refresh a cada 2 minutos
+    setInterval(function() {
+        if (!document.hidden) {
+            // location.reload();
+        }
+    }, 120000);
+});
+</script>
+{% endblock %}

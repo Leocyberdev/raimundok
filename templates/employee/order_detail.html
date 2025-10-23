@@ -1,0 +1,970 @@
+{% extends "employee/base.html" %}
+
+{% block page_title %}Detalhes do Pedido{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .order-detail-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .order-header-card {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3);
+    }
+
+    .order-title {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .company-logo-large {
+        width: 80px;
+        height: 80px;
+        border-radius: 15px;
+        object-fit: cover;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .company-placeholder-large {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 2rem;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .order-info h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+    }
+
+    .order-meta {
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1rem;
+    }
+
+    .status-badge-large {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: auto;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .detail-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-top: 4px solid #3b82f6;
+    }
+
+    .detail-card.warning {
+        border-top-color: var(--warning-color);
+    }
+
+    .detail-card.success {
+        border-top-color: var(--success-color);
+    }
+
+    .detail-card.danger {
+        border-top-color: var(--danger-color);
+    }
+
+    .detail-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .detail-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #3b82f6;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .detail-title {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin: 0;
+    }
+
+    .detail-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin: 0;
+    }
+
+    .detail-subtitle {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+
+    .observations-section {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .observations-header {
+        background: #f8fafc;
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+
+    .observations-title {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .add-observation-form {
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f8fafc;
+    }
+
+    .observation-textarea {
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 15px;
+        resize: vertical;
+        min-height: 100px;
+        width: 100%;
+        font-family: inherit;
+    }
+
+    .observation-textarea:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .observations-list {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .observation-item {
+        padding: 20px;
+        border-bottom: 1px solid #f1f5f9;
+        transition: all 0.3s ease;
+    }
+
+    .observation-item:hover {
+        background: #f8fafc;
+    }
+
+    .observation-item:last-child {
+        border-bottom: none;
+    }
+
+    .observation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .observation-author {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .author-avatar {
+        width: 35px;
+        height: 35px;
+        background: #3b82f6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .author-info strong {
+        color: var(--dark-color);
+        font-weight: 600;
+    }
+
+    .observation-date {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+    }
+
+    .observation-content {
+        color: var(--dark-color);
+        line-height: 1.6;
+        margin-left: 45px;
+    }
+
+    .empty-observations {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--secondary-color);
+    }
+
+    .empty-observations i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    @media (max-width: 768px) {
+        .order-title {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .order-meta {
+            justify-content: center;
+            text-align: center;
+        }
+
+        .status-badge-large {
+            margin: 0 auto;
+        }
+
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .observation-content {
+            margin-left: 0;
+            margin-top: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block employee_content %}
+<div class="order-detail-container">
+    <!-- Header do Pedido -->
+    <div class="order-header-card">
+        <div class="order-title">
+            {% if order.company_logo %}
+                <img src="{{ url_for('static', filename='uploads/' + order.company_logo) }}"
+                     alt="Logo" class="company-logo-large">
+            {% else %}
+                <div class="company-placeholder-large">
+                    {{ order.company_name[0].upper() }}
+                </div>
+            {% endif %}
+
+            <div class="order-info">
+                <h1>{{ order.company_name }}</h1>
+                {% if order.subtitle %}
+                    <p style="margin: 0.5rem 0; font-size: 1.1rem; opacity: 0.9;">{{ order.subtitle }}</p>
+                {% endif %}
+                {% if order.is_urgent and order.status not in ['entregue'] %}
+                    <div class="alert alert-danger mb-2" style="padding: 8px 15px; margin-bottom: 10px;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>PEDIDO URGENTE</strong> - Marcado como prioridade pelo administrador
+                    </div>
+                {% endif %}
+                <div class="order-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-hashtag"></i>
+                        <span>Pedido #{{ order.id }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-user"></i>
+                        <span>{{ order.created_by.username }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        {% set created_br = order.created_at.astimezone(timezone('America/Sao_Paulo')) if order.created_at.tzinfo else timezone('America/Sao_Paulo').localize(order.created_at) %}
+                        <span>{{ created_br.strftime('%d/%m/%Y às %H:%M') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-badge-large">
+                {% if order.status == 'aprovado' %}
+                    <i class="fas fa-check"></i>Aprovado
+                {% elif order.status == 'em_producao' %}
+                    <i class="fas fa-cogs"></i>Em Produção
+                {% elif order.status == 'pronto' %}
+                    <i class="fas fa-check-circle"></i>Pronto
+                {% elif order.status == 'entregue' %}
+                    <i class="fas fa-truck"></i>Entregue
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Descrição do Pedido -->
+    {% if order.description %}
+    <div class="card mb-4" style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+        <h5 class="card-title mb-3" style="color: var(--dark-color); display: flex; align-items: center;">
+            <i class="fas fa-file-alt me-2" style="color: #3b82f6;"></i>
+            Descrição do Pedido
+        </h5>
+        <p style="color: var(--dark-color); line-height: 1.6; margin-bottom: 0;">{{ order.description }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Detalhes do Pedido -->
+    <div class="details-grid">
+        <div class="detail-card">
+            <div class="detail-header">
+                <div class="detail-icon">
+                    <i class="fas fa-calendar-plus"></i>
+                </div>
+                <h6 class="detail-title">Data do Pedido</h6>
+            </div>
+            <h3 class="detail-value">{{ order.order_date | format_datetime ('%d/%m/%Y') }}</h3>
+            <p class="detail-subtitle">{{ order_data.weekday_name }}</p>
+        </div>
+
+        <div class="detail-card {% if order_data.is_urgent %}warning{% endif %}">
+            <div class="detail-header">
+                <div class="detail-icon" style="background: {% if order_data.is_urgent %}var(--warning-color){% else %}#3b82f6{% endif %};">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <h6 class="detail-title">Data de Entrega</h6>
+            </div>
+            <h3 class="detail-value">{{ order.delivery_date | format_datetime ('%d/%m/%Y') }}</h3>
+            <p class="detail-subtitle">
+                <span class="{{ order_data.delivery_status.class }}">{{ order_data.delivery_status.text }}</span>
+            </p>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-header">
+                <div class="detail-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h6 class="detail-title">Tempo Decorrido</h6>
+            </div>
+            <h3 class="detail-value">{{ order_data.elapsed_days }}</h3>
+            <p class="detail-subtitle">Desde a criação</p>
+        </div>
+
+        <div class="detail-card success">
+            <div class="detail-header">
+                <div class="detail-icon" style="background: var(--success-color);">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h6 class="detail-title">Observações</h6>
+            </div>
+            <h3 class="detail-value">{{ observations | length }}</h3>
+            <p class="detail-subtitle">Total de comentários</p>
+        </div>
+
+        <!-- Novas informações do pedido -->
+        {% if order.subtitle %}
+        <div class="detail-card">
+            <div class="detail-header">
+                <div class="detail-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h6 class="detail-title">Subtítulo</h6>
+            </div>
+            <h3 class="detail-value">{{ order.subtitle }}</h3>
+        </div>
+        {% endif %}
+
+        {% if order.description %}
+        <div class="detail-card">
+            <div class="detail-header">
+                <div class="detail-icon">
+                    <i class="fas fa-comment-dots"></i>
+                </div>
+                <h6 class="detail-title">Descrição</h6>
+            </div>
+            <h3 class="detail-value">{{ order.description }}</h3>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Histórico de Status e Opções de Entrega -->
+    <div class="row mt-4">
+        <!-- Histórico de Status -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Histórico de Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if status_history %}
+                        <div class="timeline">
+                            {% for history in status_history %}
+                                <div class="timeline-item mb-3">
+                                    <div class="d-flex align-items-start">
+                                        <div class="timeline-marker me-3">
+                                            {% if history.new_status == 'aprovado' %}
+                                                <i class="fas fa-check-circle text-primary"></i>
+                                            {% elif history.new_status == 'em_producao' %}
+                                                <i class="fas fa-cogs text-warning"></i>
+                                            {% elif history.new_status == 'pronto' %}
+                                                <i class="fas fa-check text-success"></i>
+                                            {% elif history.new_status == 'entregue' %}
+                                                <i class="fas fa-truck text-info"></i>
+                                            {% else %}
+                                                <i class="fas fa-circle text-secondary"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="timeline-content flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        {% if history.old_status %}
+                                                            {{ history.old_status.replace('_', ' ').title() }} →
+                                                        {% endif %}
+                                                        <span class="text-primary">{{ history.new_status.replace('_', ' ').title() }}</span>
+                                                    </h6>
+                                                    <p class="text-muted mb-0">
+                                                        <i class="fas fa-user me-1"></i>
+                                                        {{ history.user.username }}
+                                                    </p>
+                                                </div>
+                                                <small class="text-muted">
+                                                    {% set history_br = history.created_at.astimezone(timezone('America/Sao_Paulo')) if history.created_at.tzinfo else timezone('America/Sao_Paulo').localize(history.created_at) %}
+                                                    {{ history_br.strftime('%d/%m/%Y %H:%M') }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-history fa-2x mb-2"></i>
+                            <p class="mb-0">Nenhuma alteração de status registrada</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Opções de Entrega (se existirem) -->
+        <div class="col-md-6">
+            {% if delivery_options %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Relatório de Entrega
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for delivery in delivery_options %}
+                        <div class="delivery-option-item mb-3 p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-0">Entrega registrada</h6>
+                                <small class="text-muted">
+                                    {{ delivery.created_at | format_datetime ('%d/%m/%Y %H:%M') }}
+                                </small>
+                            </div>
+                            <div class="row">
+                                {% set options = delivery.get_selected_options() %}
+                                {% if options %}
+                                    {% for option in options %}
+                                        <div class="col-6 mb-1">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            {{ option }}
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="col-12">
+                                        <span class="text-muted">Nenhuma opção selecionada</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>
+                                    Registrado por: {{ delivery.created_by.username }} em {{ delivery.created_at | format_datetime_br }}
+                                </small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Relatório de Entrega
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-clipboard fa-2x mb-2"></i>
+                        <p class="mb-0">Nenhum relatório de entrega registrado</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Seção de Observações -->
+    <div class="observations-section mt-4">
+        <div class="observations-header">
+            <h5 class="observations-title">
+                <i class="fas fa-comments"></i>
+                Observações do Pedido
+            </h5>
+        </div>
+
+        <!-- Formulário para Adicionar Observação -->
+        <div class="add-observation-form">
+            <form method="POST" action="{{ url_for('employee.add_observation', order_id=order.id) }}">
+                <div class="mb-3">
+                    <label for="content" class="form-label fw-bold">
+                        <i class="fas fa-plus-circle me-2"></i>Adicionar Nova Observação
+                    </label>
+                    <textarea class="observation-textarea" id="content" name="content"
+                              placeholder="Digite sua observação sobre este pedido..." required></textarea>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Sua observação será visível para todos os usuários do sistema
+                    </small>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Adicionar Observação
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Observações -->
+        <div class="observations-list">
+            {% if observations %}
+                {% for observation in observations %}
+                <div class="observation-item">
+                    <div class="observation-header">
+                        <div class="observation-author">
+                            <div class="author-avatar">
+                                {{ observation.author.username[0].upper() }}
+                            </div>
+                            <div class="author-info">
+                                <strong>{{ observation.author.username }}</strong>
+                                <span class="text-muted">
+                                    ({{ 'Administrador' if observation.author.is_admin() else 'Funcionário' }})
+                                </span>
+                            </div>
+                        </div>
+                        <div class="observation-date">
+                            {% set obs_br = observation.created_at.astimezone(timezone('America/Sao_Paulo')) if observation.created_at.tzinfo else timezone('America/Sao_Paulo').localize(observation.created_at) %}
+                            {{ obs_br.strftime('%d/%m/%Y às %H:%M') }}
+                        </div>
+                    </div>
+                    <div class="observation-content">
+                        {{ observation.content }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-observations">
+                    <i class="fas fa-comment-slash"></i>
+                    <h6>Nenhuma observação ainda</h6>
+                    <p>Seja o primeiro a adicionar uma observação sobre este pedido.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="mt-4 text-center">
+        <a href="{{ url_for('employee.orders') }}" class="btn btn-outline-secondary me-3">
+            <i class="fas fa-arrow-left me-2"></i>Voltar aos Pedidos
+        </a>
+        <a href="{{ url_for('employee.calendar') }}" class="btn btn-outline-info me-3">
+            <i class="fas fa-calendar me-2"></i>Ver no Calendário
+        </a>
+
+        <!-- Botão para alterar status -->
+        <button type="button" class="btn btn-warning" id="changeStatusBtn">
+            <i class="fas fa-edit me-2"></i>Alterar Status
+        </button>
+    </div>
+</div>
+
+<!-- Modal para alteração de status -->
+<div class="modal fade" id="changeStatusModal" tabindex="-1" aria-labelledby="changeStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changeStatusModalLabel">
+                    <i class="fas fa-edit me-2"></i>Alterar Status do Pedido
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Pedido:</strong> {{ order.company_name }}</p>
+                <p><strong>Status Atual:</strong>
+                    <span class="badge bg-primary">{{ order.status.replace('_', ' ').title() }}</span>
+                </p>
+
+                <form id="changeStatusForm">
+                    <div class="mb-3">
+                        <label for="newStatus" class="form-label">Novo Status:</label>
+                        <select class="form-select" id="newStatus" name="status" required>
+                            <option value="">Selecione um status...</option>
+                            <option value="entregue">Entregue</option>
+                            <!-- Opções serão carregadas via JavaScript -->
+                        </select>
+                    </div>
+
+                    <!-- Opções de entrega (aparece apenas quando status for 'entregue') -->
+                    <div id="deliveryOptions" class="d-none">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Atenção:</strong> Para alterar o status para "Entregue", você deve selecionar pelo menos uma das opções abaixo:
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Opções de Entrega:</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input delivery-option" type="checkbox" id="fonte" name="fonte">
+                                        <label class="form-check-label" for="fonte">
+                                            <i class="fas fa-font me-2"></i>Fonte
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input delivery-option" type="checkbox" id="gabarito" name="gabarito">
+                                        <label class="form-check-label" for="gabarito">
+                                            <i class="fas fa-ruler me-2"></i>Gabarito
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input delivery-option" type="checkbox" id="com_pistao" name="com_pistao">
+                                        <label class="form-check-label" for="com_pistao">
+                                            <i class="fas fa-cog me-2"></i>Com Pistão
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input delivery-option" type="checkbox" id="placa_cristal" name="placa_cristal">
+                                        <label class="form-check-label" for="placa_cristal">
+                                            <i class="fas fa-gem me-2"></i>Placa Cristal
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="deliveryValidationMessage" class="alert alert-warning d-none">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Selecione pelo menos uma opção de entrega para continuar.
+                        </div>
+                    </div>
+                </form>
+
+                <div id="noPermissionsMessage" class="alert alert-warning d-none">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Você não tem permissão para alterar o status deste pedido.
+                    Entre em contato com o administrador.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmChangeStatus">
+                    <i class="fas fa-save me-2"></i>Alterar Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    // Auto-resize textarea
+    const textarea = $('#content');
+    textarea.on('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Scroll para a última observação quando a página carrega
+    const observationsList = $('.observations-list');
+    if (observationsList.length && observationsList.children().length > 0) {
+        observationsList.scrollTop(observationsList[0].scrollHeight);
+    }
+
+    // Validação do formulário
+    $('form').on('submit', function(e) {
+        const content = $('#content').val().trim();
+        if (content.length < 5) {
+            e.preventDefault();
+            alert('A observação deve ter pelo menos 5 caracteres.');
+            $('#content').focus();
+            return false;
+        }
+
+        // Mostrar loading
+        const submitBtn = $(this).find('button[type="submit"]');
+        submitBtn.prop('disabled', true);
+        submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Adicionando...');
+    });
+
+    // Funcionalidade de alteração de status
+    let allowedStatuses = [];
+
+    // Carregar permissões de status do funcionário
+    function loadStatusPermissions() {
+        $.ajax({
+            url: '{{ url_for("employee.get_status_permissions") }}',
+            method: 'GET',
+            success: function(response) {
+                allowedStatuses = response.allowed_statuses;
+
+                if (allowedStatuses.length === 0) {
+                    $('#changeStatusBtn').prop('disabled', true);
+                    $('#changeStatusBtn').attr('title', 'Você não tem permissão para alterar status');
+                }
+            },
+            error: function() {
+                console.error('Erro ao carregar permissões de status');
+                $('#changeStatusBtn').prop('disabled', true);
+            }
+        });
+    }
+
+    // Abrir modal de alteração de status
+    $('#changeStatusBtn').click(function() {
+        const modal = new bootstrap.Modal(document.getElementById('changeStatusModal'));
+
+        // Limpar select e opções de entrega
+        $('#newStatus').empty().append('<option value="">Selecione um status...</option>');
+        $('#deliveryOptions').addClass('d-none');
+        $('#deliveryValidationMessage').addClass('d-none');
+        $('.delivery-option').prop('checked', false);
+
+        if (allowedStatuses.length === 0) {
+            $('#noPermissionsMessage').removeClass('d-none');
+            $('#changeStatusForm').addClass('d-none');
+            $('#confirmChangeStatus').addClass('d-none');
+        } else {
+            $('#noPermissionsMessage').addClass('d-none');
+            $('#changeStatusForm').removeClass('d-none');
+            $('#confirmChangeStatus').removeClass('d-none');
+
+            // Adicionar opções de status permitidas
+            allowedStatuses.forEach(function(statusObj) {
+                if (statusObj.status !== '{{ order.status }}') {
+                    $('#newStatus').append(
+                        `<option value="${statusObj.status}">${statusObj.display_name}</option>`
+                    );
+                }
+            });
+        }
+
+        modal.show();
+    });
+
+    // Mostrar/esconder opções de entrega baseado no status selecionado
+    $('#newStatus').change(function() {
+        const selectedStatus = $(this).val();
+
+        if (selectedStatus === 'entregue') {
+            $('#deliveryOptions').removeClass('d-none');
+        } else {
+            $('#deliveryOptions').addClass('d-none');
+            $('#deliveryValidationMessage').addClass('d-none');
+            $('.delivery-option').prop('checked', false);
+        }
+    });
+
+    // Validação das opções de entrega
+    function validateDeliveryOptions() {
+        const selectedStatus = $('#newStatus').val();
+
+        if (selectedStatus === 'entregue') {
+            const hasSelectedOption = $('.delivery-option:checked').length > 0;
+
+            if (!hasSelectedOption) {
+                $('#deliveryValidationMessage').removeClass('d-none');
+                return false;
+            } else {
+                $('#deliveryValidationMessage').addClass('d-none');
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    // Esconder mensagem de validação quando uma opção for selecionada
+    $('.delivery-option').change(function() {
+        if ($('.delivery-option:checked').length > 0) {
+            $('#deliveryValidationMessage').addClass('d-none');
+        }
+    });
+
+    // Confirmar alteração de status
+    $('#confirmChangeStatus').click(function() {
+        const newStatus = $('#newStatus').val();
+
+        if (!newStatus) {
+            alert('Por favor, selecione um status.');
+            return;
+        }
+
+        // Validar opções de entrega se necessário
+        if (!validateDeliveryOptions()) {
+            return;
+        }
+
+        const confirmBtn = $(this);
+        const originalText = confirmBtn.html();
+
+        // Mostrar loading
+        confirmBtn.prop('disabled', true);
+        confirmBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Alterando...');
+
+        // Preparar dados para envio
+        const formData = {
+            status: newStatus
+        };
+
+        // Adicionar opções de entrega se o status for 'entregue'
+        if (newStatus === 'entregue') {
+            formData.fonte = $('#fonte').is(':checked');
+            formData.gabarito = $('#gabarito').is(':checked');
+            formData.com_pistao = $('#com_pistao').is(':checked');
+            formData.placa_cristal = $('#placa_cristal').is(':checked');
+        }
+
+        // Enviar requisição
+        $.ajax({
+            url: '{{ url_for("employee.change_order_status", order_id=order.id) }}',
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    // Fechar modal
+                    bootstrap.Modal.getInstance(document.getElementById('changeStatusModal')).hide();
+
+                    // Mostrar mensagem de sucesso
+                    showAlert('success', response.message);
+
+                    // Recarregar página após 2 segundos
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Erro ao alterar status. Tente novamente.');
+            },
+            complete: function() {
+                // Restaurar botão
+                confirmBtn.prop('disabled', false);
+                confirmBtn.html(originalText);
+            }
+        });
+    });
+
+    // Função para mostrar alertas
+    function showAlert(type, message) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+
+        // Adicionar alerta no topo da página
+        $('.order-detail-container').prepend(alertHtml);
+
+        // Scroll para o topo
+        $('html, body').animate({ scrollTop: 0 }, 500);
+
+        // Remover alerta após 5 segundos
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 5000);
+    }
+
+    // Carregar permissões ao inicializar
+    loadStatusPermissions();
+
+    // Atualizar observações a cada 30 segundos
+    setInterval(function() {
+        if (!document.hidden) {
+            // Aqui poderia fazer uma requisição AJAX para buscar novas observações
+            // Por enquanto, apenas um placeholder
+        }
+    }, 30000);
+});
+</script>
+{% endblock %}
