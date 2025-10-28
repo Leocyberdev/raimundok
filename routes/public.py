@@ -10,14 +10,14 @@ public_bp = Blueprint('public', __name__)
 def track_order(token):
     """Página pública de rastreamento de pedido"""
     order = Order.query.filter_by(tracking_token=token).first()
-    
+
     if not order:
         abort(404)
-    
+
     status_history = StatusHistory.query.filter_by(order_id=order.id).order_by(StatusHistory.changed_at.asc()).all()
-    
+
     delivery_status = get_delivery_status_text(order.delivery_date)
-    
+
     status_map = {
         'pendente': {'label': 'Pendente', 'icon': '⏳', 'color': 'warning'},
         'aprovado': {'label': 'Aprovado', 'icon': '✅', 'color': 'success'},
@@ -25,37 +25,37 @@ def track_order(token):
         'pronto': {'label': 'Pronto', 'icon': '📦', 'color': 'primary'},
         'entregue': {'label': 'Entregue', 'icon': '🎉', 'color': 'success'}
     }
-    
+
     # Lista completa de status para cálculo de progresso
     all_statuses = ['pendente', 'aprovado', 'em_producao', 'pronto', 'entregue']
     # Status que devem ser exibidos para o cliente
     client_statuses = ['em_producao', 'pronto', 'entregue']
-    
+
     try:
         current_status_index = all_statuses.index(order.status)
     except ValueError:
         current_status_index = 0
-    
+
     timeline = []
     # Itera apenas sobre os status que o cliente deve ver
     for status_key in client_statuses:
-        
+
         # Encontra o índice do status na lista completa para a comparação de progresso
         try:
             full_index = all_statuses.index(status_key)
         except ValueError:
             continue # Deve ser impossível se client_statuses for um subconjunto de all_statuses
-        
+
         status_info = status_map.get(status_key, {'label': status_key.title(), 'icon': '📌', 'color': 'secondary'})
-        
+
         is_completed = full_index <= current_status_index
         is_current = full_index == current_status_index
-        
+
         history_entry = next(
             (h for h in status_history if h.new_status == status_key),
             None
         )
-        
+
         timeline.append({
             'status': status_key,
             'label': status_info['label'],
@@ -66,69 +66,7 @@ def track_order(token):
             'changed_at': history_entry.changed_at if history_entry else None,
             'changed_by': history_entry.user.username if history_entry else None
         })
-        
-    all_statuses = ['pendente', 'aprovado', 'em_producao', 'pronto', 'entregue']
-        loop:
-        
-    for status_key in client_statuses:
-        
-        # Encont    # Lista completa de status para cálculo de progresso
-    all_statuses = ['pendente', 'aprovado', 'em_producao', 'pronto', 'entregue']
-    # Status que devem ser exibidos para o cliente
-    client_statuses = ['em_producao', 'pronto', 'entregue']
-    
-    try:
-        current_status_index = all_statuses.index(order.status)
-    except ValueError:
-        current_status_index = 0
-    
-    timeline = []
-    # Itera apenas sobre os status que o cliente deve ver
-    for status_key in client_statuses:
-        
-        # Encon    # Lista completa de status para cálculo de progresso
-    all_statuses = ['pendente', 'aprovado', 'em_producao', 'pronto', 'entregue']
-    # Status que devem ser exibidos para o cliente
-    client_statuses = ['em_producao', 'pronto', 'entregue']
-    
-    try:
-        current_status_index = all_statuses.index(order.status)
-    except ValueError:
-        current_status_index = 0
-    
-    timeline = []
-    # Itera apenas sobre os status que o cliente deve ver
-    for status_key in client_statuses:
-        
-        # Encontra o índice do status na lista completa para a comparação de progresso
-        try:
-            full_index = all_statuses.index(status_key)
-        except ValueError:
-            continue # Deve ser impossível se client_statuses for um subconjunto de all_statuses
-        
-        status_info = status_map.get(status_key, {'label': status_key.title(), 'icon': '📌', 'color': 'secondary'})
-        
-        is_completed = full_index <= current_status_index
-        is_current = full_index == current_status_index
-        
-        history_entry = next(
-            (h for h in status_history if h.new_status == status_key),
-            None
-        )
-        
-        timeline.append({
-            'status': status_key,
-            'label': status_info['label'],
-            'icon': status_info['icon'],
-            'color': status_info['color'],
-            'is_completed': is_completed,
-            'is_current': is_current,
-            'changed_at': history_entry.changed_at if history_entry else None,
-            'changed_by': history_entry.user.username if history_entry else None
-        }) ...
-        
-        
-        
+
     return render_template(
         'public/track_order.html',
         order=order,
