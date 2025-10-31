@@ -4,8 +4,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.user import User, db
-from main import app
+from src.models.user import User, db
+from src.main import app
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash
 
