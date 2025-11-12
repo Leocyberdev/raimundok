@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-import uuid
 from datetime import datetime
 import pytz
 
@@ -57,7 +56,6 @@ class User(UserMixin, db.Model):
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    tracking_token = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     company_name = db.Column(db.String(200), nullable=False)
     subtitle = db.Column(db.String(300))
     description = db.Column(db.Text)
@@ -110,7 +108,6 @@ class Order(db.Model):
             'status': self.status,
             'approved': self.approved,
             'delivered_at': self.delivered_at.isoformat() if self.delivered_at else None,
-            'tracking_token': self.tracking_token,
             'is_urgent': self.is_urgent
         }
 

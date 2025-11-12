@@ -11,7 +11,6 @@ from src.routes.user import user_bp
 from src.routes.auth import auth_bp
 from src.routes.admin import admin_bp
 from src.routes.employee import employee_bp
-from src.routes.public import public_bp
 from src.database.config import get_database_config, is_production
 from datetime import date
 from pytz import timezone
@@ -162,7 +161,6 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(admin_bp, url_prefix='/')
 app.register_blueprint(employee_bp, url_prefix='/')
-app.register_blueprint(public_bp)
 
 
 # =====================
@@ -268,9 +266,24 @@ with app.app_context():
 # =====================
 # Rotas estáticas
 # =====================
-@app.route('/')
-def index():
-    return redirect(url_for('auth.login'))
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path == '':
+        return redirect(url_for('auth.login'))
+
+    static_folder_path = app.static_folder
+    if static_folder_path is None:
+        return "Static folder not configured", 404
+
+    if path != "" and os.path.exists(os.path.join(static_folder_path, path)):
+        return send_from_directory(static_folder_path, path)
+    else:
+        index_path = os.path.join(static_folder_path, 'index.html')
+        if os.path.exists(index_path):
+            return send_from_directory(static_folder_path, 'index.html')
+        else:
+            return "index.html not found", 404
 
 
 # =====================

@@ -408,19 +408,6 @@
     </div>
 
     <div class="container">
-        {% if order.tracking_token %}
-        <div class="alert alert-info text-center" role="alert">
-            <strong>Link Público de Rastreamento:</strong>
-            <span id="trackingLink" class="d-block mb-2 text-primary font-weight-bold">
-                {{ url_for('public.track_order', tracking_token=order.tracking_token, _external=True) }}
-            </span>
-            <button id="copyLinkButton" class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-copy me-1"></i> Copiar Link
-            </button>
-            
-        </div>
-        {% endif %}
-
         <div class="progress-container">
             <div class="progress-header">
                 <div class="progress-percentage">
@@ -680,47 +667,6 @@
         document.getElementById('changeStatusBtn').addEventListener('click', function() {
             const modal = new bootstrap.Modal(document.getElementById('changeStatusModal'));
             modal.show();
-        });
-    </script>
-<script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const copyButton = document.getElementById('copyLinkButton');
-            const trackingLinkSpan = document.getElementById('trackingLink');
-
-            if (copyButton && trackingLinkSpan) {
-                copyButton.addEventListener('click', function() {
-                    const linkToCopy = trackingLinkSpan.textContent.trim();
-                    
-                    // Cria um elemento de área de transferência temporário
-                    const tempInput = document.createElement('input');
-                    tempInput.value = linkToCopy;
-                    document.body.appendChild(tempInput);
-                    
-                    // Seleciona o texto e copia
-                    tempInput.select();
-                    tempInput.setSelectionRange(0, 99999); // Para mobile
-                    
-                    try {
-                        document.execCommand('copy');
-                        copyButton.innerHTML = '<i class="fas fa-check me-1"></i> Copiado!';
-                        copyButton.classList.remove('btn-outline-primary');
-                        copyButton.classList.add('btn-success');
-                        
-                        setTimeout(() => {
-                            copyButton.innerHTML = '<i class="fas fa-copy me-1"></i> Copiar Link';
-                            copyButton.classList.remove('btn-success');
-                            copyButton.classList.add('btn-outline-primary');
-                        }, 2000);
-                    } catch (err) {
-                        console.error('Falha ao copiar: ', err);
-                        copyButton.innerHTML = '<i class="fas fa-times me-1"></i> Erro ao Copiar';
-                        copyButton.classList.remove('btn-outline-primary');
-                        copyButton.classList.add('btn-danger');
-                    }
-                    
-                    document.body.removeChild(tempInput);
-                });
-            }
         });
     </script>
 </body>
