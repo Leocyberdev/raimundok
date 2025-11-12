@@ -59,6 +59,7 @@ def add_order():
             company_name = request.form.get('company_name')
             subtitle = request.form.get('subtitle')
             description = request.form.get('description')
+            client_id = request.form.get('client_id')
             order_date = datetime.strptime(request.form.get('order_date'), '%Y-%m-%d').date()
             delivery_date = datetime.strptime(request.form.get('delivery_date'), '%Y-%m-%d').date()
 
@@ -81,7 +82,8 @@ def add_order():
                 company_logo=logo_filename,
                 order_date=order_date,
                 delivery_date=delivery_date,
-                created_by_id=current_user.id
+                created_by_id=current_user.id,
+                client_id=int(client_id) if client_id else None
             )
 
             db.session.add(order)
@@ -93,10 +95,13 @@ def add_order():
         except Exception as e:
             flash(f'Erro ao adicionar pedido: {str(e)}', 'error')
 
+    # Buscar lista de clientes para o formulário
+    clients = User.query.filter_by(user_type='cliente', is_active=True).order_by(User.username).all()
+    
     # Preparar data/hora atual formatada para o template
     now = datetime.now(pytz.timezone("America/Sao_Paulo")).strftime("%Y-%m-%dT%H:%M")  # formato para input datetime-local
 
-    return render_template('admin/add_order.html', now=now)
+    return render_template('admin/add_order.html', now=now, clients=clients)
 
 @admin_bp.route('/admin/pedidos')
 @login_required
@@ -1548,3 +1553,199 @@ def change_employee_password(employee_id):
         flash(f'Erro ao alterar senha: {str(e)}', 'error')
 
     return redirect(url_for('admin.employee_details', employee_id=employee_id))
+
+# =====================================================
+# ROTAS DE GERENCIAMENTO DE CLIENTES
+# =====================================================
+
+@admin_bp.route('/admin/clientes')
+@login_required
+@admin_required
+def clients():
+    """Lista todos os clientes"""
+    clients = User.query.filter_by(user_type='cliente').all()
+    return render_template('admin/clients.html', clients=clients)
+
+
+@admin_bp.route('/admin/clientes/adicionar', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add_client():
+    """Adicionar novo cliente"""
+    if request.method == 'POST':
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
+            full_name = request.form.get('full_name')
+            email = request.form.get('email')
+            phone = request.form.get('phone')
+            address = request.form.get('address')
+
+            if not username or not password:
+                flash('Nome de usuário e senha são obrigatórios!', 'error')
+                return redirect(url_for('admin.add_client'))
+
+            if User.query.filter_by(username=username).first():
+                flash('Nome de usuário já existe!', 'error')
+                return redirect(url_for('admin.add_client'))
+
+            if len(password) < 6:
+                flash('A senha deve ter pelo menos 6 caracteres!', 'error')
+                return redirect(url_for('admin.add_client'))
+
+            client = User(
+                username=username,
+                user_type='cliente',
+                full_name=full_name,
+                email=email,
+                phone=phone,
+                address=address,
+                is_active=True
+            )
+            client.set_password(password)
+
+            db.session.add(client)
+            db.session.commit()
+
+            flash(f'Cliente {username} adicionado com sucesso!', 'success')
+            return redirect(url_for('admin.clients'))
+
+        except Exception as e:
+            flash(f'Erro ao adicionar cliente: {str(e)}', 'error')
+
+    return render_template('admin/add_client.html')
+
+
+@admin_bp.route('/admin/clientes/<int:client_id>/detalhes')
+@login_required
+@admin_required
+def client_details(client_id):
+    """Detalhes do cliente"""
+    client = User.query.get_or_404(client_id)
+    
+    if client.user_type != 'cliente':
+        flash('Usuário não é um cliente!', 'error')
+        return redirect(url_for('admin.clients'))
+    
+    client_orders = Order.query.filter_by(client_id=client.id).order_by(Order.created_at.desc()).all()
+    
+    return render_template('admin/client_details.html', client=client, orders=client_orders)
+
+
+@admin_bp.route('/admin/clientes/<int:client_id>/editar', methods=['POST'])
+@login_required
+@admin_required
+def edit_client(client_id):
+    """Editar informações do cliente"""
+    client = User.query.get_or_404(client_id)
+
+    try:
+        new_username = request.form.get('username')
+        full_name = request.form.get('full_name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        address = request.form.get('address')
+        is_active = request.form.get('is_active') == 'on'
+
+        if not new_username:
+            flash('Nome de usuário é obrigatório!', 'error')
+            return redirect(url_for('admin.client_details', client_id=client_id))
+
+        if new_username != client.username and User.query.filter_by(username=new_username).first():
+            flash('Nome de usuário já existe!', 'error')
+            return redirect(url_for('admin.client_details', client_id=client_id))
+
+        client.username = new_username
+        client.full_name = full_name
+        client.email = email
+        client.phone = phone
+        client.address = address
+        client.is_active = is_active
+
+        db.session.commit()
+        flash('Informações do cliente atualizadas com sucesso!', 'success')
+
+    except Exception as e:
+        flash(f'Erro ao atualizar cliente: {str(e)}', 'error')
+
+    return redirect(url_for('admin.client_details', client_id=client_id))
+
+
+@admin_bp.route('/admin/clientes/<int:client_id>/mudar-senha', methods=['POST'])
+@login_required
+@admin_required
+def change_client_password(client_id):
+    """Mudar senha do cliente"""
+    client = User.query.get_or_404(client_id)
+
+    try:
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+
+        if not new_password or not confirm_password:
+            flash('Todos os campos são obrigatórios!', 'error')
+            return redirect(url_for('admin.client_details', client_id=client_id))
+
+        if new_password != confirm_password:
+            flash('Nova senha e confirmação não coincidem!', 'error')
+            return redirect(url_for('admin.client_details', client_id=client_id))
+
+        if len(new_password) < 6:
+            flash('A senha deve ter pelo menos 6 caracteres!', 'error')
+            return redirect(url_for('admin.client_details', client_id=client_id))
+
+        client.set_password(new_password)
+        db.session.commit()
+
+        flash(f'Senha do cliente {client.username} alterada com sucesso!', 'success')
+
+    except Exception as e:
+        flash(f'Erro ao alterar senha: {str(e)}', 'error')
+
+    return redirect(url_for('admin.client_details', client_id=client_id))
+
+
+@admin_bp.route('/admin/clientes/<int:client_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def toggle_client_status(client_id):
+    """Ativar/Desativar cliente"""
+    client = User.query.get_or_404(client_id)
+
+    try:
+        client.is_active = not client.is_active
+        db.session.commit()
+
+        status = 'ativado' if client.is_active else 'desativado'
+        flash(f'Cliente {client.username} {status} com sucesso!', 'success')
+
+    except Exception as e:
+        flash(f'Erro ao alterar status do cliente: {str(e)}', 'error')
+
+    return redirect(url_for('admin.clients'))
+
+
+@admin_bp.route('/admin/clientes/<int:client_id>/excluir', methods=['POST'])
+@login_required
+@admin_required
+def delete_client(client_id):
+    """Excluir cliente"""
+    client = User.query.get_or_404(client_id)
+
+    try:
+        client_orders = Order.query.filter_by(client_id=client.id).count()
+        
+        if client_orders > 0:
+            flash(f'Não é possível excluir o cliente {client.username} pois ele possui {client_orders} pedido(s) associado(s)!', 'error')
+            return redirect(url_for('admin.client_details', client_id=client_id))
+
+        username = client.username
+        db.session.delete(client)
+        db.session.commit()
+
+        flash(f'Cliente {username} excluído com sucesso!', 'success')
+
+    except Exception as e:
+        flash(f'Erro ao excluir cliente: {str(e)}', 'error')
+
+    return redirect(url_for('admin.clients'))

@@ -1,0 +1,98 @@
+{% extends "client/base.html" %}
+
+{% block title %}Meus Pedidos{% endblock %}
+{% block page_title %}Meus Pedidos{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-box"></i> Todos os Pedidos</h5>
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('client.orders', status='all') }}" class="btn btn-sm {% if status_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Todos
+            </a>
+            <a href="{{ url_for('client.orders', status='pendente') }}" class="btn btn-sm {% if status_filter == 'pendente' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                Pendentes
+            </a>
+            <a href="{{ url_for('client.orders', status='em_producao') }}" class="btn btn-sm {% if status_filter == 'em_producao' %}btn-info{% else %}btn-outline-info{% endif %}">
+                Em Produção
+            </a>
+            <a href="{{ url_for('client.orders', status='pronto') }}" class="btn btn-sm {% if status_filter == 'pronto' %}btn-success{% else %}btn-outline-success{% endif %}">
+                Prontos
+            </a>
+            <a href="{{ url_for('client.orders', status='entregue') }}" class="btn btn-sm {% if status_filter == 'entregue' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+                Entregues
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if orders %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Empresa</th>
+                            <th>Descrição</th>
+                            <th>Data do Pedido</th>
+                            <th>Data de Entrega</th>
+                            <th>Status</th>
+                            <th>Urgente</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td><strong>#{{ order.id }}</strong></td>
+                            <td>{{ order.company_name }}</td>
+                            <td>
+                                {% if order.subtitle %}
+                                    {{ order.subtitle[:50] }}{% if order.subtitle|length > 50 %}...{% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.order_date | format_date }}</td>
+                            <td>{{ order.delivery_date | format_date }}</td>
+                            <td>
+                                <span class="badge status-badge-{{ order.status }}">
+                                    {% if order.status == 'pendente' %}Pendente
+                                    {% elif order.status == 'em_producao' %}Em Produção
+                                    {% elif order.status == 'pronto' %}Pronto
+                                    {% elif order.status == 'entregue' %}Entregue
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if order.is_urgent %}
+                                    <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Urgente</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Normal</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('client.order_detail', order_id=order.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> Detalhes
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <p class="text-muted">
+                    {% if status_filter == 'all' %}
+                        Nenhum pedido cadastrado ainda.
+                    {% else %}
+                        Nenhum pedido encontrado com o filtro selecionado.
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

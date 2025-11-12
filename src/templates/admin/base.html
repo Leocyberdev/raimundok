@@ -380,6 +380,13 @@
                     </div>
 
                     <div class="nav-item">
+                        <a href="{{ url_for('admin.clients') }}" class="nav-link {% if request.endpoint in ['admin.clients', 'admin.add_client', 'admin.client_details'] %}active{% endif %}">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Clientes</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-item">
                         <a href="{{ url_for('admin.status_orders', status='aprovado') }}" class="nav-link {% if request.endpoint == 'admin.status_orders' and request.args.get('status') == 'aprovado' %}active{% endif %}">
                             <i class="fas fa-thumbs-up"></i>
                             <span>Aprovados</span>

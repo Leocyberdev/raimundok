@@ -1,0 +1,198 @@
+{% extends "client/base.html" %}
+
+{% block title %}Detalhes do Pedido #{{ order.id }}{% endblock %}
+{% block page_title %}Detalhes do Pedido #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('client.orders') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Voltar para Pedidos
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informações do Pedido</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>ID do Pedido:</strong>
+                        <p>#{{ order.id }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Empresa:</strong>
+                        <p>{{ order.company_name }}</p>
+                    </div>
+                </div>
+
+                {% if order.subtitle %}
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>Subtítulo:</strong>
+                        <p>{{ order.subtitle }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if order.description %}
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>Descrição:</strong>
+                        <p>{{ order.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Data do Pedido:</strong>
+                        <p>{{ order.order_date | format_date }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Data de Entrega:</strong>
+                        <p>{{ order.delivery_date | format_date }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Status:</strong>
+                        <p>
+                            <span class="badge status-badge-{{ order.status }}">
+                                {% if order.status == 'pendente' %}Pendente
+                                {% elif order.status == 'em_producao' %}Em Produção
+                                {% elif order.status == 'pronto' %}Pronto
+                                {% elif order.status == 'entregue' %}Entregue
+                                {% endif %}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Prioridade:</strong>
+                        <p>
+                            {% if order.is_urgent %}
+                                <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Urgente</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Normal</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                {% if order.company_logo %}
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>Logo da Empresa:</strong>
+                        <div class="mt-2">
+                            <img src="/static/uploads/{{ order.company_logo }}" alt="Logo" class="img-thumbnail" style="max-width: 300px;">
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if observations %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-comments"></i> Observações e Atualizações</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for obs in observations %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ obs.author.username }}</strong>
+                            <small class="text-muted">{{ obs.created_at | format_datetime_br }}</small>
+                        </div>
+                        <p class="mb-0 mt-2">{{ obs.content }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Progresso do Pedido</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Pedido Criado</span>
+                        <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                    <div class="progress mb-3" style="height: 5px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Em Produção</span>
+                        {% if order.status in ['em_producao', 'pronto', 'entregue'] %}
+                            <i class="fas fa-check-circle text-success"></i>
+                        {% elif order.status == 'pendente' %}
+                            <i class="fas fa-clock text-warning"></i>
+                        {% else %}
+                            <i class="fas fa-circle text-muted"></i>
+                        {% endif %}
+                    </div>
+                    <div class="progress mb-3" style="height: 5px;">
+                        <div class="progress-bar bg-info" role="progressbar" 
+                             style="width: {% if order.status in ['em_producao', 'pronto', 'entregue'] %}100{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Pronto</span>
+                        {% if order.status in ['pronto', 'entregue'] %}
+                            <i class="fas fa-check-circle text-success"></i>
+                        {% elif order.status == 'em_producao' %}
+                            <i class="fas fa-clock text-warning"></i>
+                        {% else %}
+                            <i class="fas fa-circle text-muted"></i>
+                        {% endif %}
+                    </div>
+                    <div class="progress mb-3" style="height: 5px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {% if order.status in ['pronto', 'entregue'] %}100{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Entregue</span>
+                        {% if order.status == 'entregue' %}
+                            <i class="fas fa-check-circle text-success"></i>
+                        {% elif order.status == 'pronto' %}
+                            <i class="fas fa-clock text-warning"></i>
+                        {% else %}
+                            <i class="fas fa-circle text-muted"></i>
+                        {% endif %}
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar bg-secondary" role="progressbar" 
+                             style="width: {% if order.status == 'entregue' %}100{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+
+                {% if order.delivered_at %}
+                <div class="alert alert-success mt-3">
+                    <i class="fas fa-check-circle"></i> 
+                    <strong>Pedido Entregue!</strong><br>
+                    <small>{{ order.delivered_at | format_datetime_br }}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

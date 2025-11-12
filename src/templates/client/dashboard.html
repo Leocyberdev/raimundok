@@ -1,0 +1,173 @@
+{% extends "client/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard - Bem-vindo, {{ current_user.full_name or current_user.username }}!{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-box fa-3x text-primary mb-3"></i>
+                <h3>{{ total_orders }}</h3>
+                <p class="text-muted mb-0">Total de Pedidos</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                <h3>{{ orders_pending }}</h3>
+                <p class="text-muted mb-0">Pendentes</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-cog fa-3x text-info mb-3"></i>
+                <h3>{{ orders_in_production }}</h3>
+                <p class="text-muted mb-0">Em Produção</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h3>{{ orders_ready }}</h3>
+                <p class="text-muted mb-0">Prontos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i> Pedidos Recentes
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Empresa</th>
+                                    <th>Data</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr onclick="window.location='{{ url_for('client.order_detail', order_id=order.id) }}'" style="cursor: pointer;">
+                                    <td>#{{ order.id }}</td>
+                                    <td>{{ order.company_name }}</td>
+                                    <td>{{ order.order_date | format_date }}</td>
+                                    <td>
+                                        <span class="badge status-badge-{{ order.status }}">
+                                            {% if order.status == 'pendente' %}Pendente
+                                            {% elif order.status == 'em_producao' %}Em Produção
+                                            {% elif order.status == 'pronto' %}Pronto
+                                            {% elif order.status == 'entregue' %}Entregue
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('client.orders') }}" class="btn btn-primary btn-sm">
+                            Ver Todos os Pedidos <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center mb-0">Nenhum pedido cadastrado ainda.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-calendar-alt"></i> Próximas Entregas
+            </div>
+            <div class="card-body">
+                {% if upcoming_deliveries %}
+                    <div class="list-group list-group-flush">
+                        {% for order in upcoming_deliveries %}
+                        <a href="{{ url_for('client.order_detail', order_id=order.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ order.company_name }}</h6>
+                                    <small class="text-muted">ID: #{{ order.id }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="badge bg-primary">{{ order.delivery_date | format_date }}</div>
+                                    <br>
+                                    <small class="badge status-badge-{{ order.status }}">
+                                        {% if order.status == 'pendente' %}Pendente
+                                        {% elif order.status == 'em_producao' %}Em Produção
+                                        {% elif order.status == 'pronto' %}Pronto
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center mb-0">Nenhuma entrega programada.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-pie"></i> Distribuição por Status
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <div class="h1 text-warning">{{ orders_pending }}</div>
+                            <small class="text-muted">Pendentes</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <div class="h1 text-info">{{ orders_in_production }}</div>
+                            <small class="text-muted">Em Produção</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <div class="h1 text-success">{{ orders_ready }}</div>
+                            <small class="text-muted">Prontos</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <div class="h1 text-secondary">{{ orders_delivered }}</div>
+                            <small class="text-muted">Entregues</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

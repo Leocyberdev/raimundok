@@ -23,14 +23,17 @@ def login():
             login_user(user)
             
             if request.is_json:
+                redirect_url = '/admin' if user.is_admin() else ('/client/dashboard' if user.is_client() else '/funcionario')
                 return jsonify({
                     'success': True,
                     'user_type': user.user_type,
-                    'redirect_url': '/admin' if user.is_admin() else '/funcionario'
+                    'redirect_url': redirect_url
                 })
             else:
                 if user.is_admin():
                     return redirect(url_for('admin.dashboard'))
+                elif user.is_client():
+                    return redirect(url_for('client.dashboard'))
                 else:
                     return redirect(url_for('employee.dashboard'))
         else:

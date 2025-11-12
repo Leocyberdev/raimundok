@@ -142,6 +142,19 @@
             </div>
 
             <form id="addOrderForm" method="POST" enctype="multipart/form-data">
+                <!-- Cliente -->
+                <div class="form-floating">
+                    <select class="form-select" id="client_id" name="client_id">
+                        <option value="">Sem cliente associado</option>
+                        {% for client in clients %}
+                            <option value="{{ client.id }}">{{ client.full_name or client.username }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="client_id">
+                        <i class="fas fa-user-tie me-2"></i>Cliente
+                    </label>
+                </div>
+
                 <!-- Nome da Empresa -->
                 <div class="form-floating">
                     <input type="text" class="form-control" id="company_name" name="company_name" 

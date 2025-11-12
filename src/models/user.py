@@ -13,19 +13,25 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    user_type = db.Column(db.String(20), nullable=False)  # 'admin' ou 'funcionario'
+    user_type = db.Column(db.String(20), nullable=False)  # 'admin', 'funcionario' ou 'cliente'
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(pytz.timezone("America/Sao_Paulo"))
     )
     profile_picture = db.Column(db.String(200), nullable=True)  # Nome do arquivo da foto de perfil
-    is_active = db.Column(db.Boolean, default=True)    
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Campos adicionais para clientes
+    full_name = db.Column(db.String(200), nullable=True)  # Nome completo do cliente
+    email = db.Column(db.String(120), nullable=True)  # Email do cliente
+    phone = db.Column(db.String(20), nullable=True)  # Telefone do cliente
+    address = db.Column(db.String(300), nullable=True)  # Endereço do cliente
+    
     # Relacionamentos
     orders_created = db.relationship('Order', foreign_keys='Order.created_by_id', backref='created_by', lazy='dynamic')
-    
+    client_orders = db.relationship('Order', foreign_keys='Order.client_id', backref='client', lazy='dynamic')
     
     observations = db.relationship('OrderObservation', back_populates='author', foreign_keys='OrderObservation.author_id', lazy='dynamic')
-
 
     status_permissions = db.relationship('StatusPermission', backref='user', lazy='dynamic', cascade='all, delete-orphan')
 
@@ -40,6 +46,9 @@ class User(UserMixin, db.Model):
 
     def is_employee(self):
         return self.user_type == 'funcionario'
+    
+    def is_client(self):
+        return self.user_type == 'cliente'
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -51,7 +60,11 @@ class User(UserMixin, db.Model):
             'user_type': self.user_type,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'is_active': self.is_active,
-            'profile_picture': self.profile_picture
+            'profile_picture': self.profile_picture,
+            'full_name': self.full_name,
+            'email': self.email,
+            'phone': self.phone,
+            'address': self.address
         }
 
 class Order(db.Model):
@@ -63,6 +76,7 @@ class Order(db.Model):
     order_date = db.Column(db.Date, nullable=False)
     delivery_date = db.Column(db.Date, nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Cliente do pedido
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(pytz.timezone("America/Sao_Paulo"))
@@ -104,6 +118,8 @@ class Order(db.Model):
             'order_date': self.order_date.isoformat() if self.order_date else None,
             'delivery_date': self.delivery_date.isoformat() if self.delivery_date else None,
             'created_by': self.created_by.username if self.created_by else None,
+            'client': self.client.username if self.client else None,
+            'client_name': self.client.full_name if self.client else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'status': self.status,
             'approved': self.approved,

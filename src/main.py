@@ -11,6 +11,7 @@ from src.routes.user import user_bp
 from src.routes.auth import auth_bp
 from src.routes.admin import admin_bp
 from src.routes.employee import employee_bp
+from src.routes.client import client_bp
 from src.database.config import get_database_config, is_production
 from datetime import date
 from pytz import timezone
@@ -161,6 +162,7 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(admin_bp, url_prefix='/')
 app.register_blueprint(employee_bp, url_prefix='/')
+app.register_blueprint(client_bp, url_prefix='/')
 
 
 # =====================
@@ -171,74 +173,53 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 with app.app_context():
     try:
-        # Verificar se precisa migrar (adicionar colunas novas)
-        try:
-            from sqlalchemy import text, inspect
-            inspector = inspect(db.engine)
-
-            # Migrar coluna is_urgent
-            if 'is_urgent' not in [col['name'] for col in inspector.get_columns('order')]:
-                print("Adicionando coluna is_urgent...")
-                db.session.execute(text('ALTER TABLE "order" ADD COLUMN is_urgent BOOLEAN DEFAULT FALSE'))
-                db.session.commit()
-                print("Coluna is_urgent adicionada com sucesso!")
-
-            # Migrar coluna subtitle
-            if 'subtitle' not in [col['name'] for col in inspector.get_columns('order')]:
-                print("Adicionando coluna subtitle...")
-                db.session.execute(text('ALTER TABLE "order" ADD COLUMN subtitle VARCHAR(300)'))
-                db.session.commit()
-                print("Coluna subtitle adicionada com sucesso!")
-
-            # Migrar coluna description
-            if 'description' not in [col['name'] for col in inspector.get_columns('order')]:
-                print("Adicionando coluna description...")
-                db.session.execute(text('ALTER TABLE "order" ADD COLUMN description TEXT'))
-                db.session.commit()
-                print("Coluna description adicionada com sucesso!")
-
-        except Exception as e:
-            print(f"Erro ao verificar/adicionar colunas da tabela 'order': {e}")
-
-        # Migração automática
-        try:
-            # Verificar e adicionar colunas se necessário
-            with app.app_context():
-                inspector = inspect(db.engine)
-
-                # Verificar tabela service_order
-                if 'service_order' in inspector.get_table_names():
-                    columns = [col['name'] for col in inspector.get_columns('service_order')]
-
-                    # Adicionar colunas de arquivo se não existirem
-                    with db.engine.connect() as conn:
-                        if 'file1_filename' not in columns:
-                            conn.execute(text('ALTER TABLE service_order ADD COLUMN file1_filename VARCHAR(200)'))
-                            conn.commit()
-                        if 'file2_filename' not in columns:
-                            conn.execute(text('ALTER TABLE service_order ADD COLUMN file2_filename VARCHAR(200)'))
-                            conn.commit()
-                        if 'file3_filename' not in columns:
-                            conn.execute(text('ALTER TABLE service_order ADD COLUMN file3_filename VARCHAR(200)'))
-                            conn.commit()
-
-                    print("Colunas de arquivo verificadas/adicionadas com sucesso!")
-        except Exception as e:
-            print(f"Erro ao verificar/adicionar colunas: {e}")
-            # Continuar mesmo com erro de migração
-
+        from sqlalchemy import text, inspect
+        inspector = inspect(db.engine)
+        
+        # Criar todas as tabelas primeiro
         db.create_all()
+        
+        # Atualizar inspector após criar tabelas
+        inspector = inspect(db.engine)
+        
+        # Função auxiliar para verificar e adicionar coluna
+        def add_column_if_not_exists(table_name, column_name, column_definition):
+            try:
+                columns = [col['name'] for col in inspector.get_columns(table_name)]
+                if column_name not in columns:
+                    print(f"Adicionando coluna {column_name} na tabela {table_name}...")
+                    with db.engine.connect() as conn:
+                        conn.execute(text(f'ALTER TABLE "{table_name}" ADD COLUMN {column_name} {column_definition}'))
+                        conn.commit()
+                    print(f"Coluna {column_name} adicionada com sucesso!")
+                    return True
+                return False
+            except Exception as e:
+                print(f"Erro ao adicionar coluna {column_name} na tabela {table_name}: {e}")
+                return False
+        
+        # Migração da tabela 'order'
+        if 'order' in inspector.get_table_names():
+            add_column_if_not_exists('order', 'is_urgent', 'BOOLEAN DEFAULT FALSE')
+            add_column_if_not_exists('order', 'subtitle', 'VARCHAR(300)')
+            add_column_if_not_exists('order', 'description', 'TEXT')
+            add_column_if_not_exists('order', 'client_id', 'INTEGER REFERENCES "user"(id)')
 
-        # Criar tabelas para AuditLog e FileReference se não existirem
-        if 'audit_log' not in inspector.get_table_names():
-            print("Criando tabela audit_log...")
-            AuditLog.__table__.create(db.engine)
-            print("Tabela audit_log criada com sucesso!")
+        # Migração da tabela 'user'
+        if 'user' in inspector.get_table_names():
+            add_column_if_not_exists('user', 'full_name', 'VARCHAR(200)')
+            add_column_if_not_exists('user', 'email', 'VARCHAR(120)')
+            add_column_if_not_exists('user', 'phone', 'VARCHAR(20)')
+            add_column_if_not_exists('user', 'address', 'VARCHAR(300)')
+            add_column_if_not_exists('user', 'profile_picture', 'VARCHAR(200)')
 
-        if 'file_reference' not in inspector.get_table_names():
-            print("Criando tabela file_reference...")
-            FileReference.__table__.create(db.engine)
-            print("Tabela file_reference criada com sucesso!")
+        # Migração da tabela 'service_order'
+        if 'service_order' in inspector.get_table_names():
+            add_column_if_not_exists('service_order', 'file1_filename', 'VARCHAR(200)')
+            add_column_if_not_exists('service_order', 'file2_filename', 'VARCHAR(200)')
+            add_column_if_not_exists('service_order', 'file3_filename', 'VARCHAR(200)')
+        
+        print("Todas as migrações foram verificadas/aplicadas!")
 
         # Criar usuários admin padrão se não existirem
         try:
@@ -290,7 +271,7 @@ def serve(path):
 # Iniciar servidor
 # =====================
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))  # Use port 8080 as default
+    port = int(os.environ.get('PORT', 5000))  # Use port 5000 for Replit
     debug = not is_production()
     app.run(host='0.0.0.0', port=port, debug=debug)
 
