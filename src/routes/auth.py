@@ -20,7 +20,7 @@ def login():
         user = User.query.filter_by(username=username).first()
         
         if user and user.check_password(password) and user.is_active:
-            login_user(user)
+            login_user(user, remember=True)
             
             if request.is_json:
                 redirect_url = '/admin' if user.is_admin() else ('/client/dashboard' if user.is_client() else '/funcionario')

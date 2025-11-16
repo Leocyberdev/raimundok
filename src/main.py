@@ -88,9 +88,19 @@ app.jinja_env.filters['format_date_sp'] = app.jinja_env.filters['format_date']
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'sistema-pedidos-secret-key-2025')
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
 
+# Configuração de sessão para funcionar através de proxy (Replit)
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400
+
 # Configuração dinâmica do banco de dados
 db_config = get_database_config()
 app.config.update(db_config)
+
+# Configurar ProxyFix para lidar com headers de proxy do Replit
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # =====================
 # Variáveis globais no template
