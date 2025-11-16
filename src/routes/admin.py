@@ -1576,7 +1576,7 @@ def add_client():
         try:
             username = request.form.get('username')
             password = request.form.get('password')
-            full_name = request.form.get('full_name')
+            cnpj = request.form.get('cnpj')
             email = request.form.get('email')
             phone = request.form.get('phone')
             address = request.form.get('address')
@@ -1596,7 +1596,7 @@ def add_client():
             client = User(
                 username=username,
                 user_type='cliente',
-                full_name=full_name,
+                cnpj=cnpj,
                 email=email,
                 phone=phone,
                 address=address,
@@ -1641,7 +1641,7 @@ def edit_client(client_id):
 
     try:
         new_username = request.form.get('username')
-        full_name = request.form.get('full_name')
+        cnpj = request.form.get('cnpj')
         email = request.form.get('email')
         phone = request.form.get('phone')
         address = request.form.get('address')
@@ -1656,7 +1656,7 @@ def edit_client(client_id):
             return redirect(url_for('admin.client_details', client_id=client_id))
 
         client.username = new_username
-        client.full_name = full_name
+        client.cnpj = cnpj
         client.email = email
         client.phone = phone
         client.address = address
