@@ -57,6 +57,26 @@ Sistema completo de gestão de pedidos (Order Management System) desenvolvido em
 - **Development**: SQLite in `src/database/app.db`
 - Auto-detection via `src/database/config.py`
 
+### Automatic Database Migrations
+O sistema possui **migração automática de banco de dados** implementada em `src/main.py` (linhas 184-254):
+
+1. **No startup, o sistema automaticamente:**
+   - Cria todas as tabelas necessárias (`db.create_all()`)
+   - Verifica se as colunas obrigatórias existem em cada tabela
+   - **Adiciona automaticamente** qualquer coluna faltante via ALTER TABLE
+
+2. **Colunas gerenciadas automaticamente:**
+   - **Tabela `order`**: `is_urgent`, `subtitle`, `description`, `client_id`
+   - **Tabela `user`**: `full_name` (usado como `cnpj`), `email`, `phone`, `address`, `profile_picture`
+   - **Tabela `service_order`**: `file1_filename`, `file2_filename`, `file3_filename`
+
+3. **Deployment para VPS PostgreSQL:**
+   - ✅ Basta fazer `git pull` na VPS
+   - ✅ O sistema detecta automaticamente o PostgreSQL via variável `DATABASE_URL`
+   - ✅ Na primeira execução, todas as colunas serão criadas automaticamente
+   - ✅ Não é necessário executar scripts SQL manualmente
+   - ✅ Alterações futuras de schema serão aplicadas automaticamente
+
 ### Default Users
 - **Admin**: `Nonato` / `123456`
 - **Admin**: `Gleissa` / `123456`
@@ -64,6 +84,13 @@ Sistema completo de gestão de pedidos (Order Management System) desenvolvido em
 - **Clientes**: Criados pelo administrador com campos de contato (nome completo, email, telefone, endereço)
 
 ## Recent Changes
+- 2025-11-16: **Atualização: Campo CNPJ da Empresa**
+  - Substituído campo "Nome Completo" por "CNPJ da Empresa" em todos os formulários e templates
+  - Campo `cnpj` no modelo User (reutiliza coluna `full_name` no banco para compatibilidade)
+  - Máscaras automáticas aplicadas: CNPJ (00.000.000/0000-00) e Telefone
+  - Atualização em: add_client.html, client_details.html, clients.html, add_order.html, profile.html, dashboard.html, base.html
+  - Rotas atualizadas: admin.py e client.py agora usam campo `cnpj`
+
 - 2025-11-12: **Sistema de Clientes Implementado**
   - Adicionado novo tipo de usuário 'cliente' com campos de contato
   - Criado painel completo para clientes (dashboard, pedidos, detalhes, perfil)

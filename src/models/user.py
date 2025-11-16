@@ -119,7 +119,7 @@ class Order(db.Model):
             'delivery_date': self.delivery_date.isoformat() if self.delivery_date else None,
             'created_by': self.created_by.username if self.created_by else None,
             'client': self.client.username if self.client else None,
-            'client_name': self.client.full_name if self.client else None,
+            'client_name': self.client.cnpj if self.client else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'status': self.status,
             'approved': self.approved,
