@@ -30,8 +30,9 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="full_name" class="form-label">Nome Completo</label>
-                        <input type="text" class="form-control" id="full_name" name="full_name" value="{{ client.full_name or '' }}">
+                        <label for="cnpj" class="form-label">CNPJ da Empresa</label>
+                        <input type="text" class="form-control" id="cnpj" name="cnpj" value="{{ client.cnpj or '' }}" maxlength="18">
+                        <small class="text-muted">Formato: 00.000.000/0000-00</small>
                     </div>
 
                     <div class="mb-3">

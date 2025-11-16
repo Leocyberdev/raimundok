@@ -180,7 +180,7 @@
         <div class="sidebar-header">
             <i class="fas fa-user-circle fa-3x mb-2"></i>
             <h4>Painel do Cliente</h4>
-            <small>{{ current_user.full_name or current_user.username }}</small>
+            <small>{{ current_user.username }}</small>
         </div>
         <div class="sidebar-menu">
             <a href="{{ url_for('client.dashboard') }}" class="{% if request.endpoint == 'client.dashboard' %}active{% endif %}">

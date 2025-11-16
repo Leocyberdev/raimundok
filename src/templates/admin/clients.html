@@ -23,7 +23,7 @@
                         <tr>
                             <th>ID</th>
                             <th>Nome de Usuário</th>
-                            <th>Nome Completo</th>
+                            <th>CNPJ</th>
                             <th>Email</th>
                             <th>Telefone</th>
                             <th>Status</th>
@@ -36,7 +36,7 @@
                         <tr>
                             <td>{{ client.id }}</td>
                             <td><strong>{{ client.username }}</strong></td>
-                            <td>{{ client.full_name or '-' }}</td>
+                            <td>{{ client.cnpj or '-' }}</td>
                             <td>{{ client.email or '-' }}</td>
                             <td>{{ client.phone or '-' }}</td>
                             <td>

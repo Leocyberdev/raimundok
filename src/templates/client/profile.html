@@ -19,8 +19,8 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="full_name" class="form-label">Nome Completo</label>
-                        <input type="text" class="form-control" id="full_name" name="full_name" value="{{ current_user.full_name or '' }}">
+                        <label for="cnpj" class="form-label">CNPJ da Empresa</label>
+                        <input type="text" class="form-control" id="cnpj" name="cnpj" value="{{ current_user.cnpj or '' }}" maxlength="18" placeholder="00.000.000/0000-00">
                     </div>
 
                     <div class="mb-3">

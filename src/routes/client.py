@@ -112,7 +112,7 @@ def profile():
 @client_required
 def edit_profile():
     try:
-        current_user.full_name = request.form.get('full_name', current_user.full_name)
+        current_user.cnpj = request.form.get('cnpj', current_user.cnpj)
         current_user.email = request.form.get('email', current_user.email)
         current_user.phone = request.form.get('phone', current_user.phone)
         current_user.address = request.form.get('address', current_user.address)
